@@ -1,0 +1,15 @@
+---
+alwaysApply: true
+---
+
+## Code Implementation Rules (General)
+
+- **Primary workspace**: Use notebooks for exploration and visualization; use `.py` files for reusable libraries and production code.
+- **Minimize outputs**: Prefer inline notebook results. Only write files when explicitly needed (e.g., final models, paper tables).
+- **Environment**: Use `conda run -n cumcm-env <cmd>` for non-interactive commands.
+- **Structure**: Follow existing repo layout. Put problem-specific logic under `src/analysis/problemX/`, utilities under `src/utils/`, data in `src/data/`.
+- **Reproducibility**: Set random seeds; keep clear cell/order in notebooks.
+- **Quality**: Descriptive names, small focused functions, handle edge cases, avoid noisy logs, and keep formatting consistent.
+- **Paths**: Prefer absolute paths; use `pathlib.Path`.
+- **Docs**: Explain non-obvious steps in markdown/docstrings; keep it brief.
+- **Reviews**: Don’t save large intermediates to Git; keep outputs lightweight and intentional.

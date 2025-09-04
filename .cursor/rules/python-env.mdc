@@ -1,0 +1,36 @@
+## Python environment (cumcm-env)
+
+- **Environment name**: `cumcm-env`
+- **Scope**: Use this environment for ALL Python commands, scripts, notebooks, and tooling in this repo.
+- **Working directory**: `/home/richard/projects/cumcm` (prefer absolute paths)
+
+### How to run commands non-interactively
+- Prefer `conda run -n cumcm-env <command>` to avoid interactive activation.
+- Examples:
+  - Install dependencies:
+    ```bash
+    conda run -n cumcm-env python -m pip install -r requirements.txt
+    ```
+  - Run Problem 1 Step 1:
+    ```bash
+    conda run -n cumcm-env python -m src.analysis.problem1.step1_clarify
+    ```
+  - Run a module or script:
+    ```bash
+    conda run -n cumcm-env python -m src.main
+    ```
+  - Launch Jupyter Lab (if needed):
+    ```bash
+    conda run -n cumcm-env jupyter lab
+    ```
+
+### Interactive shells (optional)
+- If you need an interactive shell:
+  ```bash
+  conda activate cumcm-env
+  ```
+
+### Notes
+- Use absolute paths when referencing files (e.g., `/home/richard/projects/cumcm/src/attachment.xlsx`).
+- Do not rely on system Python; always run via `conda run -n cumcm-env ...`.
+- If a package is missing, install it inside `cumcm-env` using pip or conda as appropriate.

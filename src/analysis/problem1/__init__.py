@@ -1,10 +1,6 @@
 """
-Problem 1: Y chromosome concentration relationship analysis.
+Problem 1: Y-chromosome concentration modeling.
 
-This module analyzes the relationship between fetal Y chromosome concentration
-and maternal factors (gestational weeks, BMI, etc.) and tests their significance.
+This module implements analysis for modeling how fetal Y-chromosome concentration
+depends on gestational age and BMI.
 """
-
-from .correlation_analysis import YChromosomeCorrelationAnalyzer
-
-__all__ = ['YChromosomeCorrelationAnalyzer']
