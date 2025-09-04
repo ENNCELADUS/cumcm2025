@@ -1,6 +1,6 @@
 # NIPT Analysis Project
 
-A comprehensive analysis toolkit for Non-invasive Prenatal Testing (NIPT) data, addressing four key problems related to NIPT time point selection and fetal abnormality detection.
+A comprehensive statistical analysis framework for Non-invasive Prenatal Testing (NIPT) data, addressing four key problems related to NIPT timing optimization and fetal abnormality detection. This project implements advanced mixed-effects modeling, non-linear regression, and clinical decision support tools.
 
 ## Project Structure
 
@@ -36,25 +36,31 @@ output/
 
 ## Problems Addressed
 
-### Problem 1: Y Chromosome Concentration Relationship Analysis
-- Analyze correlation between fetal Y chromosome concentration and maternal factors (gestational weeks, BMI, etc.)
-- Build relationship models and test their significance
-- **Module**: `src/analysis/problem1/`
+### Problem 1: Y Chromosome Concentration Relationship Analysis ✅ **COMPLETED**
+- **Objective**: Analyze correlation between fetal Y chromosome concentration and maternal factors
+- **Implementation**: Advanced mixed-effects models with natural splines
+- **Key Results**: 
+  - Final model: `Y_concentration ~ bs(weeks, df=3) + BMI + (1|patient_id)`
+  - Conditional R²: 82.9% (Marginal R²: 6.3%)
+  - Strong evidence for non-linear gestational age effects
+  - BMI shows consistent negative association
+- **Clinical Impact**: Provides timing optimization recommendations for different BMI groups
+- **Module**: `src/analysis/problem1/` + `src/notebooks/01_data_exploration.ipynb`
 
-### Problem 2: BMI-based Grouping for Optimal NIPT Timing (Male Fetuses)
+### Problem 2: BMI-based Grouping for Optimal NIPT Timing (Male Fetuses) 📋 **PLANNED**
 - Group male fetus pregnancies by BMI for optimal NIPT timing
 - Minimize potential risk while ensuring accuracy
-- **Module**: `src/analysis/problem2/` (planned)
+- **Module**: `src/analysis/problem2/` (to be implemented)
 
-### Problem 3: Multi-factor NIPT Timing Optimization
+### Problem 3: Multi-factor NIPT Timing Optimization 📋 **PLANNED**
 - Consider multiple factors (height, weight, age, etc.) for NIPT timing
 - Comprehensive risk minimization approach
-- **Module**: `src/analysis/problem3/` (planned)
+- **Module**: `src/analysis/problem3/` (to be implemented)
 
-### Problem 4: Female Fetus Abnormality Detection
+### Problem 4: Female Fetus Abnormality Detection 📋 **PLANNED**
 - Develop methods for detecting abnormalities in female fetuses
 - Use chromosome Z-values, GC content, and other factors
-- **Module**: `src/analysis/problem4/` (planned)
+- **Module**: `src/analysis/problem4/` (to be implemented)
 
 ## Environment Setup
 
@@ -62,7 +68,7 @@ output/
 
 1. Create and activate the environment:
 ```bash
-conda create -n cumcm-env python=3.11 pandas numpy scipy matplotlib seaborn scikit-learn openpyxl xlrd jupyter -y
+conda create -n cumcm-env python=3.11 pandas numpy scipy matplotlib seaborn scikit-learn statsmodels patsy openpyxl xlrd jupyterlab ipykernel -y
 conda activate cumcm-env
 ```
 
@@ -71,7 +77,12 @@ conda activate cumcm-env
 cd /path/to/cumcm
 ```
 
-### Using pip
+3. Install additional dependencies via pip:
+```bash
+pip install -r requirements.txt
+```
+
+### Using pip Only
 
 1. Create virtual environment:
 ```bash
@@ -79,12 +90,33 @@ python -m venv cumcm-env
 source cumcm-env/bin/activate  # On Windows: cumcm-env\Scripts\activate
 ```
 
-2. Install dependencies:
+2. Install all dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
+### Verification
+
+Test your installation:
+```bash
+conda activate cumcm-env
+python -c "import pandas, numpy, statsmodels, matplotlib, seaborn; print('✅ All packages installed successfully')"
+```
+
 ## Usage
+
+### Jupyter Notebooks (Primary Interface)
+
+```bash
+# Activate environment
+conda activate cumcm-env
+
+# Start JupyterLab
+jupyter lab
+
+# Open the main analysis notebook
+# Navigate to src/notebooks/01_data_exploration.ipynb
+```
 
 ### Command Line Interface
 
@@ -92,40 +124,19 @@ pip install -r requirements.txt
 # Activate environment
 conda activate cumcm-env
 
-# Run data exploration
-python src/main.py --explore
+# Run diagnostic utilities
+python run_diagnostics.py
 
-# Run specific problem analysis
-python src/main.py --problem 1
-
-# Run all analyses
-python src/main.py --all
+# Or run specific analysis modules
+python src/main.py
 ```
 
-### Jupyter Notebooks
+### Key Analysis Files
 
-```bash
-# Start Jupyter
-jupyter lab
-
-# Open the data exploration notebook
-# Navigate to src/notebooks/01_data_exploration.ipynb
-```
-
-### Python API
-
-```python
-from src.data import NIPTDataLoader
-from src.analysis.problem1 import YChromosomeCorrelationAnalyzer
-
-# Load and preprocess data
-loader = NIPTDataLoader()
-data = loader.preprocess_data()
-
-# Run Problem 1 analysis
-analyzer = YChromosomeCorrelationAnalyzer()
-results = analyzer.generate_summary_report(data)
-```
+1. **Data Preprocessing**: `src/notebooks/00_data_preprocessing.ipynb`
+2. **Main Analysis**: `src/notebooks/01_data_exploration.ipynb` (⭐ **Primary Results**)
+3. **Analysis Summary**: `summary/p1.md` (⭐ **Comprehensive Report**)
+4. **Project Plan**: `plan/prob1.md`
 
 ## Data Description
 
@@ -138,12 +149,29 @@ The project uses NIPT data with the following key variables:
 
 ## Key Features
 
-- **Comprehensive data preprocessing** with automatic type conversion and validation
-- **Statistical analysis utilities** including correlation, regression, and significance testing
-- **Rich visualizations** with automatic saving and customization
+### 🔬 **Advanced Statistical Modeling**
+- **Mixed-effects models** with random intercepts for patient clustering (ICC ≈ 0.71)
+- **Non-linear regression** using natural splines for gestational age effects
+- **Model diagnostics** with marginal/conditional R² decomposition
+- **Clinical threshold analysis** with logistic regression for binary decision support
+
+### 📊 **Comprehensive Data Analysis**
+- **Exploratory Data Analysis** with correlation and distribution analysis
+- **Effect visualization** with partial effects plots and confidence intervals
+- **Clinical interpretation** with scenario-based prediction tables
+- **Robust statistical inference** with cluster-robust standard errors
+
+### 🎨 **Publication-Ready Visualizations**
+- **Four-panel diagnostic plots** with residual analysis
+- **Partial effects visualization** with BMI stratification
+- **Clinical threshold heatmaps** for decision support
+- **Automatic figure generation** with consistent styling
+
+### 🔧 **Robust Implementation**
+- **Comprehensive data preprocessing** with automatic type conversion
+- **Fallback mechanisms** for model convergence issues
+- **Extensive error handling** and diagnostic reporting
 - **Modular design** for easy extension and maintenance
-- **Jupyter notebook integration** for interactive analysis
-- **Command-line interface** for batch processing
 
 ## Configuration
 
@@ -156,34 +184,29 @@ Key analysis parameters can be modified in `src/config/settings.py`:
 
 ## Output
 
-- **Figures**: Saved to `output/figures/` in PNG format
-- **Results**: Analysis summaries and statistics
-- **Models**: Trained models and coefficients (future)
+### 📊 **Generated Analyses (Problem 1)**
 
-## Development Status
+**Key Visualizations** (`output/figures/`):
+- `p1_comprehensive_partial_effects.png` - Four-panel partial effects analysis ⭐
+- `p1_model_diagnostics.png` - Mixed-effects model diagnostics
+- `p1_scatter_*.png` - Exploratory scatter plots  
+- `p1_distributions.png` - Variable distribution analysis
 
-- ✅ **Data loading and preprocessing**
-- ✅ **Visualization utilities**
-- ✅ **Statistical analysis utilities**
-- ✅ **Problem 1 implementation**
-- 🔄 **Problem 2-4 modules** (in development)
-- 🔄 **Advanced modeling** (planned)
+**Statistical Results** (`output/results/`):
+- `p1_final_model_summary.csv` - Final mixed-effects model coefficients ⭐
+- `p1_clinical_interpretation_*.csv` - Clinical scenario predictions ⭐
+- `p1_model_comparison.csv` - Comprehensive model comparisons
+- `p1_*_model_results.csv` - Detailed statistical outputs
 
-## Requirements
+**Comprehensive Reports** (`summary/`):
+- `p1.md` - Complete analysis summary with interpretation ⭐
+- `preprocess.md` - Data preprocessing documentation
 
-- Python 3.10+
-- pandas, numpy, scipy
-- matplotlib, seaborn
-- scikit-learn
-- openpyxl, xlrd
-- jupyter (for notebooks)
-
-## Contributing
-
-1. Follow the modular structure for new analyses
-2. Add comprehensive docstrings and type hints
-3. Include unit tests for new functionality
-4. Update this README for new features
+### 🎯 **Key Results Summary**
+- **Final Model**: Mixed-effects with natural splines (R² = 82.9%)
+- **Clinical Impact**: BMI-stratified timing recommendations
+- **Statistical Rigor**: Comprehensive diagnostics and validation
+- **Reproducibility**: Complete analysis pipeline in Jupyter notebooks
 
 ## License
 

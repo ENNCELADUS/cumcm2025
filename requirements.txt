@@ -1,9 +1,25 @@
-pandas>=2.0.0
-numpy>=1.20.0
-scipy>=1.7.0
-matplotlib>=3.5.0
-seaborn>=0.11.0
-scikit-learn>=1.0.0
-openpyxl>=3.0.0
+# Core Data Science Stack
+pandas>=2.3.0
+numpy>=2.3.0
+scipy>=1.16.0
+matplotlib>=3.10.0
+seaborn>=0.13.0
+
+# Statistical Modeling
+statsmodels>=0.14.0
+patsy>=1.0.0
+scikit-learn>=1.7.0
+
+# Data I/O
+openpyxl>=3.1.0
 xlrd>=2.0.0
-jupyter>=1.0.0
+
+# Jupyter Environment
+jupyter>=1.1.0
+jupyterlab>=4.4.0
+ipykernel>=6.29.0
+ipywidgets>=8.1.0
+
+# Additional Dependencies
+pyyaml>=6.0.0
+requests>=2.32.0
