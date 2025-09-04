@@ -1,0 +1,5 @@
+Scenario,Weeks,BMI,Predicted_Y,Above_4pct,Clinical_Action
+"Early pregnancy, normal BMI",12,28,0.07185588951535977,✅ Yes,Proceed with NIPT
+"Mid pregnancy, normal BMI",15,28,0.07955830801461136,✅ Yes,Proceed with NIPT
+"Late pregnancy, normal BMI",20,28,0.0877308010396555,✅ Yes,Proceed with NIPT
+"Mid pregnancy, high BMI",15,35,0.07023705494323322,✅ Yes,Proceed with NIPT

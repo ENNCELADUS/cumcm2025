@@ -1,0 +1,2 @@
+Final_Model,Sample_Size,Unique_Patients,Above_4pct_Threshold,Model_AIC,Model_Type,Non_linearity,Clustering_Method,Key_Finding_Weeks,Key_Finding_BMI,Clinical_Relevance
+Mixed + Splines + Random Intercept,555,242,0.8702702702702703,,Mixed-Effects + Natural Splines,Natural Splines (df=3),Mixed-Effects Random Intercept,Non-linear positive association,Linear negative association,Optimizes NIPT timing and interpretation

@@ -1,0 +1,6 @@
+Model,Formula,Approach,R_squared,AIC,Clinical_Use
+Baseline OLS,Y ~ weeks + BMI,Linear OLS,0.06186093271342563,-2225.533596113654,Basic association
+OLS + HC3 Robust SE,Y ~ weeks + BMI,Robust inference,0.06186093271342563,-2225.533596113654,Reliable inference
+OLS + Natural Splines,"Y ~ bs(weeks, df=3) + BMI",Non-linear weeks,0.094,-2241.08,Non-linear patterns
+Mixed + Splines + Random Intercept,"Y ~ bs(weeks, df=3) + BMI + (1|patient)",Mixed-effects + splines,"Marg: 0.063, Cond: 0.829",,Optimal prediction
+Mixed Logistic GLMM,"logit(Y≥4%) ~ bs(weeks, df=3) + BMI + (1|patient)",Mixed logistic,Pseudo-R²,,Binary decisions

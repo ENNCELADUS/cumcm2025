@@ -97,20 +97,95 @@ Model how fetal Y-chromosome concentration depends on gestational age and matern
 - **Decision logic** documented in notebook markdown
 - **Optional**: Save final model objects to `src/models/p1_final_model.pkl` if needed for production
 
-## 5. Robust Alternative Models (If Baseline Fails)
+## 5. Robust Alternative Models & Improvement Framework
 
-### Model Extensions
-1. **Logit transformation**: `logit(Y) ~ weeks + BMI` (stabilizes variance near boundaries)
-2. **Non-linear weeks**: Add `weeks²` or natural cubic splines (literature supports non-linearity)
-3. **Mixed-effects model**: Random intercept by 孕妇代码 (if repeated measures)
-4. **Quantile regression**: Median (τ=0.5) and 75th percentile (τ=0.75) for robustness
-5. **Interaction effects**: `weeks × BMI` if suggested by residuals
+### Overview
+**Given Baseline OLS Issues**: Heteroscedasticity detected, non-normal residuals, low R² (6.2%) → Implement robust alternatives by priority to ensure reliable statistical inference and better model fit.
+
+### Priority 1: Robust Inference (Same Formula)
+
+#### 1.1 OLS + Robust Standard Errors (HC3)
+- **Approach**: Maintain `Y ~ weeks + BMI` while replacing "nonrobust" with **HC3** (or White) robust standard errors
+- **Purpose**: Provides reliable p-values and confidence intervals under heteroscedasticity
+- **Implementation**: `model.fit(cov_type='HC3')` in statsmodels
+- **Expected**: Coefficient significance should persist with robust SEs
+
+#### 1.2 Weighted Least Squares (WLS) - Optional
+- **Weights**: Approximate `1/Var` using `1/fitted²` or variance estimated by gestational week segments
+- **Purpose**: Improve efficiency under heteroscedasticity
+- **Reporting**: Use **Robust OLS as primary result** for safety, WLS as supplementary
+
+### Priority 2: Models for Proportion-Type Dependent Variable (Recommended)
+
+#### 2.1 Beta Regression (Logit Link)
+- **Rationale**: `Y∈(0,1)` with natural heteroscedasticity → Beta regression better matches data generation mechanism
+- **Formula**: `Y ~ weeks + BMI` (can extend to `Y ~ splines(weeks, df=3) + BMI`)
+- **Comparison**: Compare pseudo-R² and AIC with OLS
+- **Library**: Use `statsmodels.genmod` or equivalent
+
+#### 2.2 Logit Transformation Alternative
+- **If Beta regression unavailable**: Use `logit(Y)` transformation + OLS + Robust SE
+- **Formula**: `logit(Y) ~ weeks + BMI` with robust standard errors
+- **Purpose**: Approximate Beta regression when computational resources limited
+
+#### 2.3 Logistic Regression (Clinical Focus)
+- **Target**: Binary outcome `I(Y≥0.04)` for clinical threshold
+- **Formula**: `logit Pr(Y≥0.04) ~ weeks + BMI (+ weeks×BMI)`
+- **Outputs**: Odds Ratios (OR), AUC, calibration curves
+- **Clinical Value**: Highly aligned with "threshold achievement" decisions
+- **Designation**: **Model 3 (Clinical Decision Model)**
+
+### Priority 3: Mild Non-linearity (Evidence-Based)
+
+#### 3.1 Restricted Cubic Splines (RCS)
+- **Rationale**: Instead of relying on small R² improvements from `weeks²` or interactions, use natural splines to capture S-shaped patterns observed in residuals
+- **Formula**: `Y ~ ns(weeks, df=3) + BMI` (applied to Beta or logit-OLS)
+- **Comparison**: Use LR test/AIC for model selection
+- **Principle**: Avoid overfitting - use df=3 or 4 maximum
+
+#### 3.2 Partial Effect Curves
+- **Output**: Generate partial effect plots showing non-linear relationships
+- **Purpose**: Visualize how Y concentration changes across gestational weeks
+- **Implementation**: Marginal effects at representative values
+
+### Priority 4: Repeated Measures (If Applicable)
+
+#### 4.1 Check for Repeated Measurements
+- **Analysis**: Examine if same `patient_code` appears multiple times
+- **Impact**: Correlated residuals can cause underestimated standard errors
+
+#### 4.2 Mixed-Effects Model
+- **Formula**: Random intercept by patient - `Y ~ weeks + BMI + (1|patient_code)`
+- **Purpose**: Account for patient-level clustering
+- **Library**: Use `statsmodels.MixedLM` or equivalent
+
+#### 4.3 Cluster-Robust Standard Errors
+- **Alternative**: Cluster-robust SE by patient code
+- **Purpose**: Correct for correlated residuals without random effects
+- **Implementation**: `cov_type='cluster'` with cluster variable
+
+### Implementation Strategy
+
+#### Model Sequence
+1. **Model 1**: Baseline OLS (already completed)
+2. **Model 1R**: OLS + HC3 Robust SE
+3. **Model 2**: Beta regression (logit link)
+4. **Model 2S**: Beta + Natural splines (if non-linearity significant)
+5. **Model 3**: Logistic regression (Y≥4%)
+6. **Model 4**: Mixed-effects (if repeated measures detected)
+
+#### Model Comparison Framework
+- **Statistical**: Compare AIC, BIC, pseudo-R² across models
+- **Clinical**: Evaluate predictive performance for 4% threshold
+- **Robustness**: Assess coefficient stability across specifications
 
 ### Deliverables
-- **Alternative models** as notebook variables (`model_logit`, `model_spline`, etc.)
-- **Model comparison** as DataFrame displayed in notebook
-- **Selection rationale** in notebook markdown cells
-- **Optional**: Model comparison exported to `output/results/p1_model_comparison.csv` for paper reference
+- **Robust models** as notebook variables (`model_robust`, `model_beta`, `model_logistic`, etc.)
+- **Model comparison table** with AIC, R², coefficient consistency
+- **Diagnostic improvements** showing resolution of heteroscedasticity/normality issues
+- **Clinical interpretation** with robust confidence intervals
+- **Sensitivity analysis** demonstrating coefficient stability
+- **Optional**: Export final model comparison to `output/results/p1_robust_model_comparison.csv`
 
 ## 6. Effect Visualization & Interpretation
 
@@ -173,10 +248,16 @@ Model how fetal Y-chromosome concentration depends on gestational age and matern
 
 ## Current Progress Summary
 
-- **Dataset**: 1,068 male fetus samples (10-25 weeks) ✅
-- **Primary correlations**: Weeks r=0.118, BMI r=-0.155 (both p<0.001) ✅
-- **Clinical relevance**: 86.4% samples above 4% reliability threshold ✅
-- **Next**: Complete Steps 4-7 in notebook 📊
+- **Dataset**: 555 male fetus samples (10-25 weeks) ✅
+- **Primary correlations**: Weeks r=0.184, BMI r=-0.138 (both p<0.001) ✅
+- **Clinical relevance**: 87.0% samples above 4% reliability threshold ✅
+- **Baseline OLS Model**: Implemented and validated ✅
+  - Model: `Y_concentration ~ weeks + BMI`
+  - F-test: 18.20 (p = 2.22e-08), R² = 0.062
+  - Coefficients: weeks = 0.00184***, BMI = -0.00198***
+  - Diagnostics: heteroscedasticity detected, residuals non-normal
+  - Status: **Statistically significant but requires robust alternatives**
+- **Next**: Steps 5-7 - Robust models, effect visualization, validation 📊
 
 ---
 
@@ -188,349 +269,20 @@ Model how fetal Y-chromosome concentration depends on gestational age and matern
 - **Dependencies**: pandas, numpy, statsmodels, matplotlib, seaborn, scipy
 - **Coding rules**: See `.cursor/rules/prob1-implementation.mdc`
 
-## A. Data Loading (Updated for Actual Structure)
-
-```python
-import pandas as pd
-import numpy as np
-import re
-from pathlib import Path
-from scipy.stats import pearsonr, spearmanr
-
-# Load male fetus data from correct sheet
-data_file = Path("src/data/data.xlsx")
-df_raw = pd.read_excel(data_file, sheet_name='男胎检测数据')
-print(f"Male fetus data: {df_raw.shape}")
-
-# Parse gestational weeks: "11w+6" -> 11.86
-def parse_gestational_weeks(week_str):
-    if pd.isna(week_str):
-        return np.nan
-    week_str = str(week_str).strip()
-    pattern = r'(\d+)w(?:\+(\d+))?'
-    match = re.search(pattern, week_str)
-    if match:
-        weeks = int(match.group(1))
-        days = int(match.group(2)) if match.group(2) else 0
-        return weeks + days / 7.0
-    else:
-        try:
-            return float(week_str)
-        except:
-            return np.nan
-
-# Process variables
-df = df_raw.copy()
-df['weeks'] = df['检测孕周'].apply(parse_gestational_weeks)
-df['BMI'] = pd.to_numeric(df['孕妇BMI'], errors='coerce')
-df['V_prop'] = pd.to_numeric(df['Y染色体浓度'], errors='coerce')  # Already proportions
-
-# Apply filters
-df_clean = df[(df['weeks'] >= 10) & (df['weeks'] <= 25)].copy()
-df_clean = df_clean.dropna(subset=['weeks', 'BMI', 'V_prop'])
-print(f"Clean dataset: {len(df_clean)} samples")
-```
-
-## B. EDA & Correlations (Updated)
-
-```python
-import matplotlib.pyplot as plt
-
-# Create scatter plots
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-
-# Y concentration vs. gestational weeks
-ax1.scatter(df_clean['weeks'], df_clean['V_prop'], alpha=0.6, s=30)
-ax1.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='4% threshold')
-ax1.set_xlabel('Gestational Weeks')
-ax1.set_ylabel('Y Chromosome Concentration')
-ax1.set_title('Y Concentration vs. Gestational Age')
-ax1.legend()
-ax1.grid(True, alpha=0.3)
-
-# Y concentration vs. BMI
-ax2.scatter(df_clean['BMI'], df_clean['V_prop'], alpha=0.6, s=30)
-ax2.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='4% threshold')
-ax2.set_xlabel('Maternal BMI')
-ax2.set_ylabel('Y Chromosome Concentration')
-ax2.set_title('Y Concentration vs. BMI')
-ax2.legend()
-ax2.grid(True, alpha=0.3)
-
-plt.tight_layout()
-plt.savefig('output/figures/p1_scatter_plots.png', dpi=300, bbox_inches='tight')
-plt.show()
-
-# Calculate correlations
-pearson_weeks = pearsonr(df_clean['weeks'], df_clean['V_prop'])
-pearson_bmi = pearsonr(df_clean['BMI'], df_clean['V_prop'])
-print(f"Weeks correlation: r={pearson_weeks[0]:.4f}, p={pearson_weeks[1]:.4f}")
-print(f"BMI correlation: r={pearson_bmi[0]:.4f}, p={pearson_bmi[1]:.4f}")
-```
-
-## C. Baseline OLS Regression
-
-```python
-import statsmodels.api as sm
-import statsmodels.formula.api as smf
-from statsmodels.stats.outliers_influence import variance_inflation_factor
-
-# Fit baseline model
-model = smf.ols("V_prop ~ weeks + BMI", data=df_clean).fit()
-print(model.summary())
-
-# Extract key results
-print(f"\nKey Results:")
-print(f"R-squared: {model.rsquared:.4f}")
-print(f"F-statistic: {model.fvalue:.4f}, p-value: {model.f_pvalue:.6f}")
-
-# Coefficient interpretation
-for param in ['weeks', 'BMI']:
-    coef = model.params[param]
-    pval = model.pvalues[param]
-    ci_lower, ci_upper = model.conf_int().loc[param]
-    print(f"{param}: β={coef:.6f}, p={pval:.6f}, 95% CI: [{ci_lower:.6f}, {ci_upper:.6f}]")
-
-# Check multicollinearity
-X = df_clean[['weeks', 'BMI']]
-X = sm.add_constant(X)
-vif_data = pd.DataFrame()
-vif_data["Variable"] = X.columns
-vif_data["VIF"] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
-print("\nVIF (Multicollinearity Check):")
-print(vif_data)
-```
-
-## D. Model Diagnostics & Extensions
-
-```python
-import matplotlib.pyplot as plt
-from scipy import stats
-
-# Residual diagnostics
-fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(12, 10))
-
-# Residuals vs fitted
-ax1.scatter(model.fittedvalues, model.resid, alpha=0.6)
-ax1.axhline(y=0, color='red', linestyle='--')
-ax1.set_xlabel('Fitted Values')
-ax1.set_ylabel('Residuals')
-ax1.set_title('Residuals vs Fitted')
-
-# Q-Q plot
-stats.probplot(model.resid, dist="norm", plot=ax2)
-ax2.set_title('Q-Q Plot')
-
-# Scale-location plot
-ax3.scatter(model.fittedvalues, np.sqrt(np.abs(model.resid)), alpha=0.6)
-ax3.set_xlabel('Fitted Values')
-ax3.set_ylabel('√|Residuals|')
-ax3.set_title('Scale-Location')
-
-# Residuals vs weeks (check for non-linearity)
-ax4.scatter(df_clean['weeks'], model.resid, alpha=0.6)
-ax4.axhline(y=0, color='red', linestyle='--')
-ax4.set_xlabel('Gestational Weeks')
-ax4.set_ylabel('Residuals')
-ax4.set_title('Residuals vs Weeks')
-
-plt.tight_layout()
-plt.savefig('output/figures/p1_diagnostics.png', dpi=300, bbox_inches='tight')
-plt.show()
-
-# Test for heteroscedasticity
-from statsmodels.stats.diagnostic import het_breuschpagan
-lm_stat, lm_pval, f_stat, f_pval = het_breuschpagan(model.resid, model.model.exog)
-print(f"\nBreusch-Pagan test for heteroscedasticity:")
-print(f"LM statistic: {lm_stat:.4f}, p-value: {lm_pval:.6f}")
-
-# If non-linearity detected, try quadratic term
-model_quad = smf.ols("V_prop ~ weeks + I(weeks**2) + BMI", data=df_clean).fit()
-print(f"\nQuadratic model R²: {model_quad.rsquared:.4f}")
-```
-
-## E. Mixed Effects (If Repeated Measures)
-
-```python
-import statsmodels.formula.api as smf
-
-# Check for repeated measures
-repeated_counts = df_clean['孕妇代码'].value_counts()
-repeated_subjects = (repeated_counts > 1).sum()
-print(f"Subjects with multiple samples: {repeated_subjects}")
-
-if repeated_subjects > 0:
-    # Fit mixed-effects model
-    df_clean['patient_id'] = df_clean['孕妇代码'].astype(str)
-    mixed = smf.mixedlm("V_prop ~ weeks + BMI", data=df_clean, groups=df_clean["patient_id"]).fit()
-    print(mixed.summary())
-    
-    # Compare with OLS
-    print(f"\nModel comparison:")
-    print(f"OLS R²: {model.rsquared:.4f}")
-    print(f"Mixed-effects AIC: {mixed.aic:.2f} vs OLS AIC: {model.aic:.2f}")
-else:
-    print("No repeated measures detected - OLS is appropriate")
-```
-
-## F. Robust Alternatives
-
-```python
-# Robust regression (Huber M-estimator)
-rlm = smf.rlm("V_prop ~ weeks + BMI", data=df_clean, M=sm.robust.norms.HuberT()).fit()
-print("Robust Regression Summary:")
-print(rlm.summary())
-
-# Quantile regression (median and 75th percentile)
-qreg_50 = smf.quantreg("V_prop ~ weeks + BMI", data=df_clean).fit(q=0.5)
-qreg_75 = smf.quantreg("V_prop ~ weeks + BMI", data=df_clean).fit(q=0.75)
-
-print(f"\nQuantile Regression Comparison:")
-print(f"Median (τ=0.5) - Weeks: {qreg_50.params['weeks']:.6f}, BMI: {qreg_50.params['BMI']:.6f}")
-print(f"75th percentile (τ=0.75) - Weeks: {qreg_75.params['weeks']:.6f}, BMI: {qreg_75.params['BMI']:.6f}")
-print(f"OLS - Weeks: {model.params['weeks']:.6f}, BMI: {model.params['BMI']:.6f}")
-
-# Logit transformation (if needed for boundary issues)
-eps = 1e-6
-df_clean['V_clipped'] = df_clean['V_prop'].clip(eps, 1-eps)
-df_clean['logitV'] = np.log(df_clean['V_clipped']/(1-df_clean['V_clipped']))
-logit_model = smf.ols("logitV ~ weeks + BMI", data=df_clean).fit()
-print(f"\nLogit transformation R²: {logit_model.rsquared:.4f}")
-```
-
-## G. Effect Visualization & Clinical Interpretation
-
-```python
-# Effect visualization
-def plot_effects(model, df_clean):
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
-    
-    # Predicted Y vs weeks at different BMI levels
-    weeks_grid = np.linspace(11, 25, 100)
-    bmi_levels = [22, 28, 35]  # Low, medium, high BMI
-    
-    for bmi in bmi_levels:
-        pred_data = pd.DataFrame({'weeks': weeks_grid, 'BMI': bmi})
-        pred_y = model.predict(pred_data)
-        ax1.plot(weeks_grid, pred_y, label=f'BMI {bmi}', linewidth=2)
-    
-    ax1.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='4% threshold')
-    ax1.scatter(df_clean['weeks'], df_clean['V_prop'], alpha=0.3, s=10, color='gray')
-    ax1.set_xlabel('Gestational Weeks')
-    ax1.set_ylabel('Predicted Y Concentration')
-    ax1.set_title('Y Concentration vs Gestational Age by BMI')
-    ax1.legend()
-    ax1.grid(True, alpha=0.3)
-    
-    # Predicted Y vs BMI at different weeks
-    bmi_grid = np.linspace(20, 45, 100)
-    week_levels = [12, 16, 20]
-    
-    for week in week_levels:
-        pred_data = pd.DataFrame({'weeks': week, 'BMI': bmi_grid})
-        pred_y = model.predict(pred_data)
-        ax2.plot(bmi_grid, pred_y, label=f'{week} weeks', linewidth=2)
-    
-    ax2.axhline(y=0.04, color='red', linestyle='--', alpha=0.7, label='4% threshold')
-    ax2.scatter(df_clean['BMI'], df_clean['V_prop'], alpha=0.3, s=10, color='gray')
-    ax2.set_xlabel('Maternal BMI')
-    ax2.set_ylabel('Predicted Y Concentration')
-    ax2.set_title('Y Concentration vs BMI by Gestational Age')
-    ax2.legend()
-    ax2.grid(True, alpha=0.3)
-    
-    plt.tight_layout()
-    plt.savefig('output/figures/p1_effect_plots.png', dpi=300, bbox_inches='tight')
-    plt.show()
-
-# Find 4% crossing points
-def find_threshold_crossing(model, bmi_levels, threshold=0.04):
-    results = []
-    weeks_grid = np.linspace(10, 25, 1000)
-    
-    for bmi in bmi_levels:
-        pred_data = pd.DataFrame({'weeks': weeks_grid, 'BMI': bmi})
-        pred_y = model.predict(pred_data)
-        
-        # Find first crossing above threshold
-        above_threshold = pred_y >= threshold
-        if above_threshold.any():
-            crossing_week = weeks_grid[above_threshold.argmax()]
-        else:
-            crossing_week = np.nan
-        
-        results.append({'BMI': bmi, 'crossing_week': crossing_week})
-    
-    return pd.DataFrame(results)
-
-# Generate plots and crossing analysis
-plot_effects(model, df_clean)
-crossing_df = find_threshold_crossing(model, [22, 28, 35])
-print("\n4% Threshold Crossing Analysis:")
-print(crossing_df)
-crossing_df.to_csv('output/results/p1_crossing_4pct.csv', index=False)
-```
-
-## H. Publication-Ready Results Template
-
-### Results Template
-```python
-# Generate comprehensive results summary
-def generate_results_summary(model, df_clean):
-    # Calculate key metrics
-    weeks_effect_pct = model.params['weeks'] * 100
-    bmi_effect_pct = abs(model.params['BMI']) * 100
-    above_threshold_pct = (df_clean['V_prop'] >= 0.04).mean() * 100
-    
-    summary = f"""
-# Problem 1: Y-Chromosome Concentration Analysis Results
-
-## Dataset Summary
-- **Sample size**: {len(df_clean)} male fetus samples 
-- **Gestational range**: {df_clean['weeks'].min():.1f} to {df_clean['weeks'].max():.1f} weeks
-- **BMI range**: {df_clean['BMI'].min():.1f} to {df_clean['BMI'].max():.1f}
-- **Above 4% threshold**: {above_threshold_pct:.1f}% of samples
-
-## Statistical Model
-**Model**: Y_concentration ~ β₀ + β₁·weeks + β₂·BMI + ε
-
-**Results**:
-- **Gestational age**: β₁ = {model.params['weeks']:.6f}, p = {model.pvalues['weeks']:.6f}
-- **Maternal BMI**: β₂ = {model.params['BMI']:.6f}, p = {model.pvalues['BMI']:.6f}
-- **Model fit**: R² = {model.rsquared:.4f}, F = {model.fvalue:.2f}, p < 0.001
-
-## Clinical Interpretation
-- **Per week increase**: Y concentration rises by {weeks_effect_pct:.3f}%
-- **Per BMI unit increase**: Y concentration decreases by {bmi_effect_pct:.3f}%
-- **Both effects statistically significant** (p < 0.001)
-
-## Conclusion
-Significant positive association with gestational age and negative association with maternal BMI, supporting NIPT optimization strategies.
-    """
-    return summary
-
-# Generate and save results
-results_text = generate_results_summary(model, df_clean)
-print(results_text)
-with open('output/results/p1_final_summary.md', 'w', encoding='utf-8') as f:
-    f.write(results_text)
-```
-
 ---
 
 ## Quick Implementation Checklist
 
 ✅ **Completed Steps** (based on actual analysis):
-1. ✅ Load male fetus data from correct sheet (1,082 → 1,068 clean samples)
+1. ✅ Load male fetus data from correct sheet (1,082 → 555 clean samples)
 2. ✅ Parse gestational weeks ("11w+6" → 11.86 format)
-3. ✅ EDA & correlations (weeks: r=0.118; BMI: r=-0.155, both p<0.001)
-4. ✅ Baseline OLS model with significance testing
-5. ✅ Diagnostic checks and assumption validation
+3. ✅ EDA & correlations (weeks: r=0.184; BMI: r=-0.138, both p<0.001)
+4. ✅ Baseline OLS model with significance testing, diagnostic checks, and model extensions
 
 🔄 **Next Steps**:
-6. 🔄 Model comparison (OLS vs. robust alternatives)
-7. 🔄 Effect visualization and 4% threshold analysis
-8. 🔄 Final results documentation and interpretation
+5. 🔄 Robust alternatives implementation (Priority 1: HC3, Priority 2: Beta/Logistic)
+6. 🔄 Effect visualization and 4% threshold analysis
+7. 🔄 Validation & robustness checks and final results documentation
 
 ---
 
@@ -553,4 +305,4 @@ with open('output/results/p1_final_summary.md', 'w', encoding='utf-8') as f:
 
 ---
 
-**Implementation Status**: Steps 1-3 completed ✅, Notebook ready for Steps 4-7 📊
+**Implementation Status**: Steps 1-4 completed ✅, Baseline OLS validated with diagnostics, Ready for robust alternatives 📊

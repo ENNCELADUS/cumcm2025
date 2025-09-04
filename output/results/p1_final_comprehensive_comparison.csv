@@ -1,0 +1,8 @@
+Model,Formula,Clustering,Non_linearity,AIC,R_squared,BIC,Type
+Baseline OLS,Y ~ weeks + BMI,None,Linear,-2225.533596113654,0.06186093271342563,-2212.5766917724145,OLS
+OLS + HC3 Robust SE,Y ~ weeks + BMI,HC3 Robust,Linear,-2225.533596113654,0.06186093271342563,-2212.5766917724145,OLS
+OLS + Splines_df3,Y ~ splines(weeks) + BMI,None,Splines_df3,-2241.081013997952,0.09432762411810525,-2219.48617342922,OLS
+OLS + Splines_df4,Y ~ splines(weeks) + BMI,None,Splines_df4,-2239.7391399960284,0.09540094533649301,-2213.8253313135497,OLS
+Mixed-Effects (Linear),Y ~ weeks + BMI + (1|patient),Random Intercept,Linear,,,,Mixed
+Mixed + Splines + Random Intercept,"Y ~ ns(weeks,3) + BMI + (1|patient)",Mixed/Cluster,Natural Splines (df=3),,,,Mixed/Robust
+Logistic (≥4% threshold),logit(Y≥0.04) ~ weeks + BMI,None,Linear,412.78389648459984,,425.74080082583913,Logistic
