@@ -1,0 +1,11 @@
+# Configuration for latexmk to use XeLaTeX by default
+$pdf_mode = 5;  # Use xelatex
+$pdflatex = 'xelatex -interaction=nonstopmode -synctex=1 %O %S';
+$postscript_mode = 0;
+$dvi_mode = 0;
+
+# Bibtex settings
+$bibtex_use = 2;
+
+# Clean up auxiliary files
+$clean_ext = "aux bbl blg fdb_latexmk fls log out synctex.gz";
