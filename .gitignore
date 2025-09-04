@@ -1,0 +1,15 @@
+# Latex build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.synctex*
+*.fdb_latexmk
+*.fls
+*.bbl
+*.blg
+*.pdf
+# Editor
+.vscode/
+.idea/
+.DS_Store
