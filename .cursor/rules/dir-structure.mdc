@@ -1,0 +1,96 @@
+---
+alwaysApply: true
+---
+
+## Project Directory Structure
+
+Use this as the authoritative reference for where code and assets live. Keep structure tidy and align new files with these conventions.
+
+```text
+src/
+├── __init__.py                 # Main package
+├── main.py                     # CLI interface
+├── config/settings.py          # Configuration & constants
+├── data/
+│   ├── loader.py              # Data preprocessing
+│   └── attachment.xlsx        # Your data file
+├── analysis/
+│   ├── problem1/              # Y chromosome analysis (fully implemented)
+│   ├── problem2/              # BMI grouping (structure ready)
+│   ├── problem3/              # Multi-factor optimization (structure ready)
+│   └── problem4/              # Female abnormality detection (structure ready)
+├── utils/
+│   ├── visualization.py       # Comprehensive plotting utilities
+│   └── statistics.py          # Statistical analysis tools
+├── notebooks/
+│   └── 01_data_exploration.ipynb  # Interactive analysis
+└── models/                    # For future ML models
+
+output/
+├── figures/                   # Auto-generated plots
+└── results/                   # Analysis reports
+```
+
+### Rules
+- **Match this layout** when adding new modules; prefer extending existing areas over creating new top-level dirs.
+- **Analysis code**: put problem-specific logic under `src/analysis/problemX/`.
+- **Data handling**: keep loaders/cleaners in `src/data/`. Do not put raw data in Git unless required.
+- **Config-only values** belong in `src/config/settings.py`.
+- **Reusable helpers** (plots, stats, io) go in `src/utils/`.
+- **Exploration** belongs in `src/notebooks/` with a clear numeric prefix.
+- **Outputs** are written to `output/` only. Never commit large intermediates.
+
+### Naming
+- Use snake_case for files and functions, PascalCase for classes.
+- Keep module names descriptive and short (`timing_optimizer.py` over `opt_timing_v2.py`).
+
+### PR checklist
+- New files placed per structure.
+- Update this doc if structure changes.
+- Add brief module docstring and type hints.
+## Project Directory Structure
+
+Use this as the authoritative reference for where code and assets live. Keep structure tidy and align new files with these conventions.
+
+```text
+src/
+├── __init__.py                 # Main package
+├── main.py                     # CLI interface
+├── config/settings.py          # Configuration & constants
+├── data/
+│   ├── loader.py              # Data preprocessing
+│   └── attachment.xlsx        # Your data file
+├── analysis/
+│   ├── problem1/              # Y chromosome analysis (fully implemented)
+│   ├── problem2/              # BMI grouping (structure ready)
+│   ├── problem3/              # Multi-factor optimization (structure ready)
+│   └── problem4/              # Female abnormality detection (structure ready)
+├── utils/
+│   ├── visualization.py       # Comprehensive plotting utilities
+│   └── statistics.py          # Statistical analysis tools
+├── notebooks/
+│   └── 01_data_exploration.ipynb  # Interactive analysis
+└── models/                    # For future ML models
+
+output/
+├── figures/                   # Auto-generated plots
+└── results/                   # Analysis reports
+```
+
+### Rules
+- **Match this layout** when adding new modules; prefer extending existing areas over creating new top-level dirs.
+- **Analysis code**: put problem-specific logic under `src/analysis/problemX/`.
+- **Data handling**: keep loaders/cleaners in `src/data/`. Do not put raw data in Git unless required.
+- **Config-only values** belong in `src/config/settings.py`.
+- **Reusable helpers** (plots, stats, io) go in `src/utils/`.
+- **Exploration** belongs in `src/notebooks/` with a clear numeric prefix.
+- **Outputs** are written to `output/` only. Never commit large intermediates.
+
+### Naming
+- Use snake_case for files and functions, PascalCase for classes.
+- Keep module names descriptive and short (`timing_optimizer.py` over `opt_timing_v2.py`).
+
+### PR checklist
+- New files placed per structure.
+- Update this doc if structure changes.
+- Add brief module docstring and type hints.
