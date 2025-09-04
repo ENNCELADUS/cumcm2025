@@ -8,8 +8,13 @@
 *.fls
 *.bbl
 *.blg
-*.pdf
 # Editor
 .vscode/
 .idea/
 .DS_Store
+
+# Problem directories (exclude other competitions)
+problems/A题/
+problems/B题/
+problems/D题/
+problems/E题/
