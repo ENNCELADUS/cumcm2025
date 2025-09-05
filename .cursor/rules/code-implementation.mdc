@@ -12,4 +12,36 @@ alwaysApply: true
 - **Quality**: Descriptive names, small focused functions, handle edge cases, avoid noisy logs, and keep formatting consistent.
 - **Paths**: Prefer absolute paths; use `pathlib.Path`.
 - **Docs**: Explain non-obvious steps in markdown/docstrings; keep it brief.
-- **Reviews**: Don’t save large intermediates to Git; keep outputs lightweight and intentional.
+- **Reviews**: Don't save large intermediates to Git; keep outputs lightweight and intentional.
+
+## Clean Separation: Notebooks vs Modules
+
+### Notebook Responsibilities
+- **Workflow presentation**: Follow implementation guides step-by-step structure
+- **Function calls**: Call module functions, not implement logic inline
+- **Results display**: Show outputs, visualizations, and progress
+- **Documentation**: Explain what each step does and why
+- **Exploration**: Interactive analysis and parameter tuning
+
+### Module Responsibilities  
+- **Implementation logic**: All algorithms, models, and complex functions
+- **Reusable functions**: Can be imported and used across notebooks
+- **Error handling**: Robust exception handling and validation
+- **Testing**: Functions should be unit testable
+- **Configuration**: Accept parameters with sensible defaults
+- **Verbose output**: Optional detailed logging for notebook display
+
+### Refactoring Guidelines
+- **Extract functions**: Move any logic >5 lines to appropriate module
+- **Preserve structure**: Keep notebook sections matching implementation guides
+- **Function naming**: Use descriptive names matching the workflow step
+- **Parameter consistency**: Use `verbose=True` for detailed notebook output
+- **Return types**: Functions should return data + optional metadata
+- **Documentation**: Add docstrings explaining parameters and returns
+
+### Module Organization
+- **`src/analysis/problemX/`**: Problem-specific preprocessing, analysis functions
+- **`src/models/`**: Model fitting, prediction, validation functions  
+- **`src/utils/`**: General utilities (visualization, statistics, I/O)
+- **`__init__.py`**: Expose key functions with `__all__` lists
+- **Function grouping**: Related functions in same module file
