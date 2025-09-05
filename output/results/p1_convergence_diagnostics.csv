@@ -1,0 +1,2 @@
+convergence_issues_count,convergence_issues,convergence_conclusion,converged,boundary_warning,aic_available,llf_valid,variance_ratio,residual_mean,residual_std,residual_skewness,residual_kurtosis
+1,AIC/BIC values are nan - possible REML vs ML issue,⚠️ MINOR ISSUES - Use robust inference,True,False,False,True,2.4586231340087616,-6.7013461846743684e-18,0.013840622179911487,0.5043512000424147,2.520427141532984

@@ -1,0 +1,2 @@
+Clinical_threshold,Samples_above_threshold,Proportion_above_threshold,ROC_AUC,Optimal_threshold,Sensitivity,Specificity,Precision,Accuracy,F1_score,True_positives,True_negatives,False_positives,False_negatives,Clinical_acceptable_count,Clinical_total_tests,Clinical_conclusion
+0.04,483,0.8702702702702703,0.9519352426961123,0.05254477637098762,0.989648033126294,0.4583333333333333,0.9245647969052224,0.9207207207207208,0.9560000000000001,478,33,39,5,2,3,⚠️ GOOD discrimination but low specificity - Consider threshold optimization

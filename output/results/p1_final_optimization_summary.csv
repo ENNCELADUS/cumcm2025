@@ -1,2 +1,2 @@
 Analysis_Complete_Date,Final_Model_Continuous,Final_Model_Binary,Random_Slopes_Decision,Marginal_R_Squared,Conditional_R_Squared,ICC_Patient_Clustering,Convergence_Issues_Resolved,Partial_Effects_Generated,Clinical_Decision_Table_Created,Optimization_Status,Ready_For_Publication
-2025-09-05 00:23:58,Mixed + Splines + Random Intercept,Standard Logistic,Not included,0.06274554293644141,0.8288976750876756,0.7108676021486802,Yes,Yes,Fallback,All 4 optimizations completed,Yes
+2025-09-05 13:20:04,Mixed + Splines + Random Intercept,Standard Logistic,Not included,0.06274554293644141,0.8288976750876756,0.7108676021486802,Yes,Yes,Fallback,All 4 optimizations completed,Yes

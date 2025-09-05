@@ -208,22 +208,113 @@ Model how fetal Y-chromosome concentration depends on gestational age and matern
 
 ## 7. Validation & Robustness Checks
 
-### Sensitivity Analysis
-1. **Leave-one-out**: Confirm coefficient signs persist
-2. **Cross-model validation**: OLS vs. splines vs. mixed-effects
-3. **Subsample stability**: Bootstrap confidence intervals
-4. **Outlier sensitivity**: Robust regression comparison
+### Overview
+**Objective**: Comprehensive validation of model significance and robustness to ensure reliable statistical inference and publication-ready results that formally address the problem requirements.
 
-### Expected Consistent Findings
-- **Weeks effect**: Positive (Y ↑ with gestational age)
-- **BMI effect**: Negative (Y ↓ with higher BMI)
-- **Significance**: Both effects statistically significant (p < 0.05)
+### Significance Testing Framework
+
+#### 7.1 Fixed Effects Significance
+**Purpose**: Test significance of primary predictors (gestational weeks and BMI) in final model
+
+**Tasks**:
+- [ ] **Coefficient significance testing**:
+  - Perform Wald tests (t/z tests) for spline terms `bs(weeks, df=3)` and `BMI`
+  - Report coefficient estimates, standard errors, and p-values
+  - Document effect directions: weeks (positive), BMI (negative)
+  - Verify significance at α = 0.05 level
+
+- [ ] **Results documentation**:
+  - Create comprehensive coefficient table with estimates, SEs, 95% CIs, p-values
+  - Format for paper inclusion in results section
+  - Export to `output/results/p1_coefficient_significance.csv`
+
+#### 7.2 Non-linearity Significance  
+**Purpose**: Validate the inclusion of spline terms vs. linear specification
+
+**Tasks**:
+- [ ] **Model comparison testing**:
+  - Likelihood Ratio Test (LRT) comparing linear vs. spline models
+  - AIC/BIC comparison between nested models
+  - Report test statistics, degrees of freedom, and p-values
+  - Document improvement in model fit from spline inclusion
+
+- [ ] **Non-linearity evidence**:
+  - Generate partial residual plots to visualize non-linear patterns
+  - Test functional form using RESET test or similar
+  - Validate spline knot placement and degrees of freedom choice
+
+#### 7.3 Random Effects Significance
+**Purpose**: Justify mixed-effects modeling approach for repeated measures
+
+**Tasks**:
+- [ ] **Variance component analysis**:
+  - Estimate random intercept variance (σ²_u) with confidence intervals
+  - Calculate and report Intraclass Correlation Coefficient (ICC)
+  - Test random effect significance using LRT (with vs. without random intercept)
+
+- [ ] **Clustering justification**:
+  - Document ICC ≈ 0.71 indicating substantial within-patient correlation
+  - Explain necessity of mixed-effects approach
+  - Validate that standard errors properly account for clustering
+
+#### 7.4 Overall Model Significance
+**Purpose**: Demonstrate global model validity and explanatory power
+
+**Tasks**:
+- [ ] **Global significance tests**:
+  - Overall F-test or χ²-test for model vs. null
+  - Report test statistics and p-values (expecting p < 0.001)
+  - Document proportion of variance explained (R², pseudo-R²)
+
+- [ ] **Model fit assessment**:
+  - Information criteria comparison (AIC, BIC) across model variants
+  - Cross-validation performance metrics
+  - Residual diagnostics confirmation
+
+#### 7.5 Clinical Threshold Validation
+**Purpose**: Validate model performance for 4% threshold prediction
+
+**Tasks**:
+- [ ] **Threshold prediction accuracy**:
+  - ROC analysis for Y ≥ 4% prediction
+  - Calculate AUC, sensitivity, specificity
+  - Optimal threshold determination
+
+- [ ] **Clinical decision support**:
+  - Calibration curves for probability predictions
+  - Decision curve analysis for clinical utility
+  - Cost-benefit analysis framework
 
 ### Deliverables
-- **Robustness results** as DataFrame in notebook
-- **Sensitivity analysis** documented in notebook markdown
-- **Reproducibility**: notebook with clear cell execution order and random seeds
-- **Final summary** in last notebook cell with key findings
+
+#### Notebook Documentation
+- **Validation results** embedded in notebook cells with detailed interpretation
+- **Significance testing summary** with all p-values and test statistics
+- **Clinical threshold analysis** with ROC curves and decision support metrics
+
+#### Output Files
+- `output/results/p1_coefficient_significance.csv` - Fixed effects significance results
+- `output/results/p1_nonlinearity_significance.csv` - Non-linearity testing results
+- `output/results/p1_random_effects_analysis.csv` - Random effects justification
+- `output/results/p1_overall_model_significance.csv` - Global model validity
+- `output/results/p1_clinical_threshold_analysis.csv` - 4% threshold validation
+
+#### Paper-Ready Results
+- **Significance testing summary table** formatted for publication
+- **Model comparison table** with AIC/BIC and significance tests
+- **Coefficient table** with robust standard errors and confidence intervals
+- **Validation metrics summary** demonstrating model reliability
+
+### Success Criteria
+- [ ] All primary effects (weeks, BMI) significant at p < 0.05
+- [ ] Non-linearity improvement statistically justified (LRT p < 0.05)
+- [ ] Random effects variance significantly different from zero
+- [ ] Overall model highly significant (p < 0.001)
+- [ ] Clinical threshold prediction AUC > 0.70
+
+---
+
+**Summary**: To complete the "significance testing of relationship models" requirement, we need comprehensive testing across five dimensions: **coefficient significance, non-linearity significance, random effects significance, overall model significance, and clinical threshold validation**, with results clearly presented in tables and text for publication.
 
 ---
 

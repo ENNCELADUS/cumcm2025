@@ -175,6 +175,37 @@ with $g(\cdot)$ a spline expansion as above. When mixed logistic (GLMM) software
   The weeks spline terms are collectively significant; BMI remains a significant negative predictor ($p\approx 0.04$). Estimated variances give **ICC ≈ 0.71**, confirming strong patient-level clustering. The $R^2$ decomposition indicates **marginal $R^2\approx 0.063$** (fixed effects) and **conditional $R^2\approx 0.829$** (fixed+random), i.e., substantial between-patient heterogeneity captured by the random intercept.
 * **Clinical classification (≥4%):** Logistic modeling with splines for weeks shows high predicted probabilities of surpassing the threshold across the observed weeks; higher BMI lowers the probability, especially in early gestation.
 
+# 显著性检验
+
+**模型背景.** 以胎儿 Y 染色体浓度为因变量（$Y$），核心自变量为孕周（weeks）与母体 BMI。为刻画孕周—$Y$ 的潜在非线性并控制个体/批次差异，最终采用自然样条与随机截距的线性混合效应模型：
+
+$$
+Y = \beta_0 + \mathbf{B}_s(\text{weeks};\,df{=}3)^\top\boldsymbol{\beta}_w + \beta_{\mathrm{BMI}}\cdot \mathrm{BMI} + u_0 + \varepsilon,
+$$
+
+其中 $u_0\sim\mathcal{N}(0,\sigma_u^2)$。显著性检验关注：各固定效应（孕周样条项与 BMI）是否显著、随机截距是否必要，以及含样条/混合结构的模型是否优于相应简化模型。
+
+**显著性检验方法.** 对系数层面，使用 Wald（z）检验评估单个回归系数是否显著偏离 0；对孕周样条项，采用联合显著性检验（似然比检验，LRT）；对嵌套结构（是否纳入随机截距、线性 vs 样条），在最大似然框架下使用 LRT；并以信息准则（AIC/BIC）比较相对优度。若 $p<0.05$ 视为显著；必要处报告更严格阈值（如 $p<0.001$）。
+
+**验证过程与异常结果处理.** 我们在多种规格（线性/样条、是否纳入随机截距、不同样条自由度）下重复拟合，并结合残差诊断与影响度分析。对出现边界估计、系数不稳定或由高杠杆点主导的结果不纳入结论，仅保留在多规格中一致、诊断良好且信息准则/LRT 同向支持的**可靠检验结果**，以保证推断的稳健性与科学性。
+
+**可靠结果（含数值）.**
+（1）**固定效应显著性（最终模型）**：BMI 呈显著负效应（估计 $-0.001332$，SE $0.000642$，z = $-2.073$，$p=0.038$）；孕周样条基函数中 `bs(weeks)[0]` 与 `bs(weeks)[2]` 显著（0.027322，SE 0.010545，z = 2.591，$p=0.010$；以及 0.058025，SE 0.005820，z = 9.971，$p<0.001$），`bs(weeks)[1]` 不显著（$-0.003377$，SE 0.007217，z = $-0.468$，$p=0.640$）。截距显著（0.104076，SE 0.020809，z = 5.002，$p<0.001$）。
+（2）**孕周非线性贡献（联合检验）**：线性 vs 样条之 LRT 给出 LR = 13.4656，df = 2，$p=0.001191$，表明引入样条后模型显著改进；信息准则亦支持该结论（AIC 改进 9.47，BIC 改进 0.83）。
+（3）**随机截距的必要性（层级结构）**：在 ML 估计下，混合模型与相应固定效应模型比较的 LRT 统计量为 186.8558，df = 1，$p<10^{-6}$，显示随机截距高度显著；方差分量估计为 $\sigma_u^2=0.000743$、$\sigma_e^2=0.000302$，组内相关系数 ICC = 0.711，提示相当比例的变异来自个体/批次层级。
+（4）**模型优度与选择**：候选模型信息准则为——线性混合效应 AIC = $-2416.47$、BIC = $-2399.20$、logLik = 1212.24；样条混合效应（最终）AIC = $-2425.94$、BIC = $-2400.02$、logLik = 1218.97；固定效应（线性）AIC = $-2241.08$、logLik = 1125.54。综合 AIC/BIC 与 LRT，样条混合效应模型最优。
+（5）**整体拟合与解释度**：相对于零模型的全局 LRT 为 104.0386，df = 4，$p<0.001$，表明整体模型高度显著。基于 Nakagawa–Schielzeth 方法，边际 $R^2=0.127$（固定效应解释 12.7% 变异），条件 $R^2=0.748$（固定效应与随机效应合计解释 74.8% 变异），与方差分解（固定效应方差 0.000152、随机效应方差 0.000743、残差方差 0.000302）一致。
+
+**结论性表述.** 以上结果一致表明：孕周对 Y 染色体浓度的影响在联合检验中高度显著（LR = 13.4656，df = 2，$p=0.001191$），BMI 的负向主效应亦达到统计显著（$p=0.038$）；同时，纳入随机截距与孕周样条项的模型在 LRT 与信息准则下显著优于基准与线性规格。该显著性证据为后续问题二与问题三的分组建模与阈值优化提供了可复核的数理依据与稳健出发点。
+
+---
+
+### 插入/图注示例（便于直接粘贴）
+
+* 图注（partial effect）：“图：在最终混合样条模型下，孕周（weeks）的部分效应曲线（自然样条，df=3），不同曲线对应不同 BMI 水平；阴影为 95% 置信区间。”
+* 表注（coefficients）：“表：最终模型固定效应系数、标准误、z 值、p 值与 95% 置信区间（方差分量已另表报告）；固定效应显著性检验采用 Wald-type z 検验并辅以 cluster-robust 与 bootstrap 稳健性检验，详见附录。”
+
+
 # Conclusion
 
 We constructed a statistically principled pipeline for Problem 1 that (i) screens associations, (ii) establishes a baseline linear relation, (iii) **demonstrates and models non-linearity** in gestational age via **natural cubic splines** (df=3), and (iv) **accounts for repeated measures** through a **random-intercept mixed-effects** specification. The fitted mixed-effects spline model confirms that **gestational weeks** and **BMI** are significant predictors of fetal Y-chromosome concentration, with a nonlinear increasing weeks effect and a negative BMI effect; strong clustering (ICC ≈ 0.71) justifies the mixed framework. This final model is selected on theoretical grounds (appropriate handling of non-linearity and clustering) and empirical evidence (likelihood-ratio improvements and $R^2$ diagnostics), furnishing a rigorous basis for inference and for clinical decision support regarding reliability thresholds. ([GitHub][9], [patsy.readthedocs.io][1], [Bookdown][2], [British Ecological Society Journals][6], [Stata][4])

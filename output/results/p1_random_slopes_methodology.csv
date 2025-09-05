@@ -1,0 +1,2 @@
+final_structure,weeks_slope_significant,bmi_slope_significant,methodology,reference
+Random intercept + both random slopes,True,True,Likelihood ratio test with boundary correction,"Pinheiro & Bates (2000), Verbeke & Molenberghs (2000)"
