@@ -163,8 +163,8 @@ with $g(\cdot)$ a spline expansion as above. When mixed logistic (GLMM) software
 
 # Results
 
-* **Correlations (N=555):** weeks shows a weak positive association with $Y$ (Pearson $r\approx 0.184$, $p<10^{-3}$); BMI shows a weak negative association ($r\approx-0.138$, $p\approx 0.001$).
-* **Baseline OLS:** $Y\sim\text{weeks}+\text{BMI}$ is globally significant (model $F$-test $p<10^{-6}$); weeks ($p\approx 10^{-6}$) positive; BMI ($p\approx 6\times 10^{-5}$) negative; $R^2\approx 0.062$. Residual diagnostics show heteroskedasticity and tail departures from normality.
+* **Correlations (N=555):** weeks shows a weak positive association with $Y$ (Pearson $r=0.1844$, $p<0.0001$; Spearman $r=0.1145$, $p=0.0069$); BMI shows a weak negative association (Pearson $r=-0.1378$, $p=0.0011$; Spearman $r=-0.1498$, $p=0.0004$).
+* **Baseline OLS:** $Y\sim\text{weeks}+\text{BMI}$ is globally significant (F-statistic=18.1995, $p<0.0001$); weeks coefficient positive ($p\approx 10^{-6}$); BMI coefficient negative ($p\approx 6\times 10^{-5}$); $R^2=0.0619$ (6.19%), Adjusted $R^2=0.0585$. Residual diagnostics show heteroskedasticity and tail departures from normality.
 * **Spline OLS (df=3):** Adding a natural spline for weeks yields $R^2\approx 0.094$ and AIC improvement (\~15.6), with an LRT versus baseline indicating **significant non-linearity** (p < 10⁻³).
 * **Mixed-effects + spline (final):**
 
@@ -172,7 +172,7 @@ with $g(\cdot)$ a spline expansion as above. When mixed logistic (GLMM) software
   Y_{ij}= \theta^\top B(\text{weeks}_{ij}) + \beta_{\text{BMI}}\,\text{BMI}_{ij} + u_i + \varepsilon_{ij}.
   $$
 
-  The weeks spline terms are collectively significant; BMI remains a significant negative predictor ($p\approx 0.04$). Estimated variances give **ICC ≈ 0.71**, confirming strong patient-level clustering. The $R^2$ decomposition indicates **marginal $R^2\approx 0.063$** (fixed effects) and **conditional $R^2\approx 0.829$** (fixed+random), i.e., substantial between-patient heterogeneity captured by the random intercept.
+  The weeks spline terms are collectively significant; BMI remains a significant negative predictor ($p=0.038$). Estimated variances give **ICC = 0.7109**, confirming strong patient-level clustering. The $R^2$ decomposition (corrected using Nakagawa & Schielzeth method) indicates **marginal $R^2=0.126988$** (12.70%, fixed effects) and **conditional $R^2=0.747584$** (74.76%, fixed+random), i.e., substantial between-patient heterogeneity captured by the random intercept.
 * **Clinical classification (≥4%):** Logistic modeling with splines for weeks shows high predicted probabilities of surpassing the threshold across the observed weeks; higher BMI lowers the probability, especially in early gestation.
 
 # 显著性检验
@@ -190,11 +190,11 @@ $$
 **验证过程与异常结果处理.** 我们在多种规格（线性/样条、是否纳入随机截距、不同样条自由度）下重复拟合，并结合残差诊断与影响度分析。对出现边界估计、系数不稳定或由高杠杆点主导的结果不纳入结论，仅保留在多规格中一致、诊断良好且信息准则/LRT 同向支持的**可靠检验结果**，以保证推断的稳健性与科学性。
 
 **可靠结果（含数值）.**
-（1）**固定效应显著性（最终模型）**：BMI 呈显著负效应（估计 $-0.001332$，SE $0.000642$，z = $-2.073$，$p=0.038$）；孕周样条基函数中 `bs(weeks)[0]` 与 `bs(weeks)[2]` 显著（0.027322，SE 0.010545，z = 2.591，$p=0.010$；以及 0.058025，SE 0.005820，z = 9.971，$p<0.001$），`bs(weeks)[1]` 不显著（$-0.003377$，SE 0.007217，z = $-0.468$，$p=0.640$）。截距显著（0.104076，SE 0.020809，z = 5.002，$p<0.001$）。
+（1）**固定效应显著性（最终模型）**：截距显著（0.104076，SE 0.020809，z = 5.002，$p=5.69×10^{-7}$）；孕周样条基函数中 `bs(weeks, df=3)[0]` 显著（0.027322，SE 0.010545，z = 2.591，$p=0.0096$），`bs(weeks, df=3)[1]` 不显著（$-0.003377$，SE 0.007217，z = $-0.468$，$p=0.640$），`bs(weeks, df=3)[2]` 极显著（0.058025，SE 0.005820，z = 9.971，$p=2.05×10^{-23}$）；BMI 呈显著负效应（$-0.001332$，SE 0.000642，z = $-2.073$，$p=0.038$）。
 （2）**孕周非线性贡献（联合检验）**：线性 vs 样条之 LRT 给出 LR = 13.4656，df = 2，$p=0.001191$，表明引入样条后模型显著改进；信息准则亦支持该结论（AIC 改进 9.47，BIC 改进 0.83）。
-（3）**随机截距的必要性（层级结构）**：在 ML 估计下，混合模型与相应固定效应模型比较的 LRT 统计量为 186.8558，df = 1，$p<10^{-6}$，显示随机截距高度显著；方差分量估计为 $\sigma_u^2=0.000743$、$\sigma_e^2=0.000302$，组内相关系数 ICC = 0.711，提示相当比例的变异来自个体/批次层级。
+（3）**随机截距的必要性（层级结构）**：在 ML 估计下，混合模型与相应固定效应模型比较的 LRT 统计量为 186.8558，df = 1，$p<10^{-6}$，显示随机截距高度显著；方差分量估计为 $\sigma_u^2=0.000743$、$\sigma_e^2=0.000302$，组内相关系数 ICC = 0.7109，提示71.1%的变异来自患者间层级。
 （4）**模型优度与选择**：候选模型信息准则为——线性混合效应 AIC = $-2416.47$、BIC = $-2399.20$、logLik = 1212.24；样条混合效应（最终）AIC = $-2425.94$、BIC = $-2400.02$、logLik = 1218.97；固定效应（线性）AIC = $-2241.08$、logLik = 1125.54。综合 AIC/BIC 与 LRT，样条混合效应模型最优。
-（5）**整体拟合与解释度**：相对于零模型的全局 LRT 为 104.0386，df = 4，$p<0.001$，表明整体模型高度显著。基于 Nakagawa–Schielzeth 方法，边际 $R^2=0.127$（固定效应解释 12.7% 变异），条件 $R^2=0.748$（固定效应与随机效应合计解释 74.8% 变异），与方差分解（固定效应方差 0.000152、随机效应方差 0.000743、残差方差 0.000302）一致。
+（5）**整体拟合与解释度**：相对于零模型的全局 LRT 为 104.0386，df = 4，$p<0.001$，表明整体模型高度显著。基于 Nakagawa–Schielzeth 方法（已修正），边际 $R^2=0.126988$（固定效应解释 12.70% 变异），条件 $R^2=0.747584$（固定效应与随机效应合计解释 74.76% 变异），与方差分解（固定效应方差 0.000152、随机效应方差 0.000743、残差方差 0.000302）一致。
 
 **结论性表述.** 以上结果一致表明：孕周对 Y 染色体浓度的影响在联合检验中高度显著（LR = 13.4656，df = 2，$p=0.001191$），BMI 的负向主效应亦达到统计显著（$p=0.038$）；同时，纳入随机截距与孕周样条项的模型在 LRT 与信息准则下显著优于基准与线性规格。该显著性证据为后续问题二与问题三的分组建模与阈值优化提供了可复核的数理依据与稳健出发点。
 
@@ -206,9 +206,31 @@ $$
 * 表注（coefficients）：“表：最终模型固定效应系数、标准误、z 值、p 值与 95% 置信区间（方差分量已另表报告）；固定效应显著性检验采用 Wald-type z 検验并辅以 cluster-robust 与 bootstrap 稳健性检验，详见附录。”
 
 
+# 软件环境与可复现性（Software & Reproducibility）
+
+**分析环境**
+* **Python**: 3.11.x
+* **主要库**: 
+  - `statsmodels` 0.14+ (混合效应建模)
+  - `pandas` 1.5+ (数据处理)
+  - `numpy` 1.24+ (数值计算)
+  - `scipy` 1.10+ (统计检验)
+  - `matplotlib` 3.7+ / `seaborn` 0.12+ (可视化)
+  - `patsy` 0.5+ (样条基函数)
+  - `scikit-learn` 1.3+ (ROC分析)
+* **随机种子**: 42 (用于bootstrap重抽样和交叉验证)
+* **计算环境**: Linux Ubuntu 22.04, conda 环境管理
+
+**统计方法学参考标准**
+* 混合效应模型: Pinheiro & Bates (2000), Verbeke & Molenberghs (2000)
+* R²计算: Nakagawa & Schielzeth (2013) 
+* 样条回归: Hastie et al. (2009)
+* 稳健推断: MacKinnon & White (1985) HC3标准误
+* 信息准则: Burnham & Anderson (2002)
+
 # Conclusion
 
-We constructed a statistically principled pipeline for Problem 1 that (i) screens associations, (ii) establishes a baseline linear relation, (iii) **demonstrates and models non-linearity** in gestational age via **natural cubic splines** (df=3), and (iv) **accounts for repeated measures** through a **random-intercept mixed-effects** specification. The fitted mixed-effects spline model confirms that **gestational weeks** and **BMI** are significant predictors of fetal Y-chromosome concentration, with a nonlinear increasing weeks effect and a negative BMI effect; strong clustering (ICC ≈ 0.71) justifies the mixed framework. This final model is selected on theoretical grounds (appropriate handling of non-linearity and clustering) and empirical evidence (likelihood-ratio improvements and $R^2$ diagnostics), furnishing a rigorous basis for inference and for clinical decision support regarding reliability thresholds. ([GitHub][9], [patsy.readthedocs.io][1], [Bookdown][2], [British Ecological Society Journals][6], [Stata][4])
+We constructed a statistically principled pipeline for Problem 1 that (i) screens associations, (ii) establishes a baseline linear relation, (iii) **demonstrates and models non-linearity** in gestational age via **natural cubic splines** (df=3), and (iv) **accounts for repeated measures** through a **random-intercept mixed-effects** specification. The fitted mixed-effects spline model confirms that **gestational weeks** and **BMI** are significant predictors of fetal Y-chromosome concentration, with a nonlinear increasing weeks effect and a negative BMI effect; strong clustering (ICC = 0.7109) justifies the mixed framework. This final model is selected on theoretical grounds (appropriate handling of non-linearity and clustering) and empirical evidence (likelihood-ratio improvements and $R^2$ diagnostics), furnishing a rigorous basis for inference and for clinical decision support regarding reliability thresholds. ([GitHub][9], [patsy.readthedocs.io][1], [Bookdown][2], [British Ecological Society Journals][6], [Stata][4])
 
 **Notes on notation and operators:** In the model formula
 
@@ -236,8 +258,14 @@ $\texttt{bs}$ denotes a **B-spline/natural spline basis expansion** for weeks, p
 
 **主要发现**
 
-* 原始样本 1082，经规则过滤（Weeks∈\[10,25]、GC∈\[40%,60%]、排除非整倍体、完整性）后得到 **N=555**。总体删除 **48.7%**；其中 GC 规则删除 **449**（42.0%）。
+* 原始样本 1082，经规则过滤（Weeks∈\[10,25]、GC∈\[40%,60%]、排除非整倍体、完整性）后得到 **N=555**。**本题仅采用男胎数据**（原因：Y 染色体浓度仅对男胎有意义），清洗后样本量 N=555，患者数=242（约 76.9% 存在重复测量）。总体删除 **48.7%**；其中 GC 规则删除 **449**（42.0%）。
 * 达到临床阈值（Y ≥ 4%）的样本 **483/555（87.0%）**。
+
+**变量单位与度量**
+* **Y 浓度**：以比例形式 (0-1) 建模，例如 0.104 表示 10.4%
+* **weeks**：孕周，单位为周
+* **BMI**：母体身体质量指数，单位为 kg/m²
+* **Y 变换**：未进行变换，直接使用原始比例值进行线性混合效应建模
 
 **建议放入正文的表/图**
 
@@ -255,8 +283,8 @@ $\texttt{bs}$ denotes a **B-spline/natural spline basis expansion** for weeks, p
 
 **主要发现**（N=555）
 
-* **Weeks–Y**：Pearson $r=0.1844$、Spearman $r=0.1145$；均 **p<0.01** → 弱正相关、显著。
-* **BMI–Y**：Pearson $r=-0.1378$、Spearman $r=-0.1498$；均 **p<0.01** → 弱负相关、显著。
+* **Weeks–Y**：Pearson $r=0.1844$ ($p<0.0001$)、Spearman $r=0.1145$ ($p=0.0069$) → 弱正相关、显著。
+* **BMI–Y**：Pearson $r=-0.1378$ ($p=0.0011$)、Spearman $r=-0.1498$ ($p=0.0004$) → 弱负相关、显著。
 
 **建议放入正文的表**
 
@@ -269,13 +297,14 @@ $\texttt{bs}$ denotes a **B-spline/natural spline basis expansion** for weeks, p
 **模型**：`Y ~ weeks + BMI`（OLS）
 **主要发现**
 
-* **R² = 0.0619**（Adj R² = 0.0585），整体 **F-test p≈0**。
-* **weeks** 系数 $ \hat\beta_{weeks}=0.001842$（p≈1e−6，正向）；**BMI** 系数 $ \hat\beta_{BMI}=-0.001975$（p≈5.9e−5，负向）。
-* 诊断：**heteroskedasticity**（Breusch–Pagan p≈0）；**非正态**（Jarque–Bera p≈0）。
+* **R² = 0.0619** (6.19%)（Adj R² = 0.0585），整体 **F-test**: F-statistic=18.1995, **p<0.0001**。
+* **weeks** 系数 $ \hat\beta_{weeks}=0.001842$（p<1e−6，正向）；**BMI** 系数 $ \hat\beta_{BMI}=-0.001975$（p=5.9e−5，负向）。
+* 诊断：**heteroskedasticity**（Breusch–Pagan p<0.0001）；**非正态**（Jarque–Bera p<0.0001）。
 
 **稳健推断（HC3）**
 
-* 采用 **HC3 robust SE** 后，系数不变但 p 值更保守：weeks 仍显著（p≈1.8e−5），BMI 仍显著（p≈0.0013）。
+* 采用 **HC3 robust SE** 后，系数不变但 p 值更保守：weeks 仍显著（p=1.8e−5），BMI 仍显著（p=0.0013）。
+* **稳健性设定详细**：聚类稳健标准误按 patient_id 聚类；bootstrap 重抽样 50 次（患者层面重抽样）；与基准 SE 对照显示结论一致性。
 
 **建议放入正文/附录的表与图**
 
@@ -296,6 +325,9 @@ $\texttt{bs}$ denotes a **B-spline/natural spline basis expansion** for weeks, p
   * **df=3**：**R² = 0.0943**（↑ 0.032）、**AIC = −2241.08**（改善 15.55）；**LR test p = 5.7e−05** → 非线性显著。
   * **df=4**：R² = 0.0954（略高），但 AIC = −2239.74（不如 df=3）。
 * 结论：Weeks 的 **non-linearity** 明确，**df=3** 在拟合与复杂度间最优。
+
+**未采用规格的理由**
+* 尝试的二次项与交互项在信息准则/LRT上不及自然样条（df=3），且诊断无优势，故未采用。自然样条在边界稳定性、平滑性和复杂度控制方面表现最佳。
 
 **建议放入正文的表**
 
@@ -322,12 +354,13 @@ $\texttt{bs}$ denotes a **B-spline/natural spline basis expansion** for weeks, p
 **模型**：`Y ~ bs(weeks, df=3) + BMI + (1|patient_id)`
 **主要发现（N=555, groups=242）**
 
-* **随机效应**：random intercept variance ≈ **0.000743**；residual variance ≈ **0.000302**；**ICC ≈ 0.7109**。
+* **随机效应**：random intercept variance = **0.000743**；residual variance = **0.000302**；**ICC = 0.7109** (71.1%变异来自患者间差异)。
 * **固定效应**：
 
-  * 样条基函数中 **bs\[2] 极显著**（z≈9.97, p≈0），总体表明 **weeks 的非线性正向效应**；
-  * **BMI** 为显著负向（p≈0.038）。
-* **R² 分解**：**marginal R² ≈ 0.0627**（仅固定效应），**conditional R² ≈ 0.8289**（固定+随机）；组间差异贡献占主导。
+  * 截距：0.104076 (SE 0.020809, z=5.002, p=5.69×10⁻⁷)
+  * 样条基函数：bs(weeks,df=3)[0]=0.027322 (z=2.591, p=0.0096)；bs(weeks,df=3)[1]=-0.003377 (不显著, p=0.640)；bs(weeks,df=3)[2]=0.058025 (z=9.971, p=2.05×10⁻²³)
+  * **BMI**：-0.001332 (SE 0.000642, z=-2.073, p=0.038)
+* **R² 分解（已修正）**：使用 Nakagawa & Schielzeth (2013) 方法，**marginal R² = 0.126988** (12.70%，仅固定效应），**conditional R² = 0.747584** (74.76%，固定+随机)；组间差异贡献占主导。
 * 诊断图（population-level residual）：中心化良好，但 **Scale-Location** 仍提示异方差上升、Q–Q 上尾偏离 → 推断时建议并行报告 **cluster-robust SE** 或 bootstrap 置信区间（你已完成 cluster-robust 的敏感性对照）。
 
 **建议放入正文的表与图**
@@ -363,9 +396,15 @@ $\texttt{bs}$ denotes a **B-spline/natural spline basis expansion** for weeks, p
 
 **数值要点**
 
-* AIC / R²：`OLS + Splines_df3` 在 **AIC** 上最优（−2241.08），**R² ≈ 0.0943**；但其**未处理 clustering**。
-* Mixed 系列反映出 **ICC≈0.71** 的强聚类，若忽略将低估 SE。
+* AIC / R²：`OLS + Splines_df3` 在 **AIC** 上最优（−2241.08），**R² = 0.0943**；但其**未处理 clustering**。
+* Mixed 系列反映出 **ICC=0.7109** 的强聚类，若忽略将低估 SE。
 * 综合理论（non-linearity + clustering）与实证（LR test、R² 分解、诊断图），**最终选用 Mixed + Splines（df=3）+ Random Intercept**。
+
+**临床阈值性能（≥4%）**
+* **ROC AUC**: 0.9519 (优秀判别能力)
+* **4%阈值性能**: 敏感性 0.990 (99.0%)，特异性 0.458 (45.8%)，准确性 0.921 (92.1%)，精确度 0.925
+* **最优阈值**: 0.0525 (5.25%, Youden指数最大化)
+* **临床建议**: 采用分级筛查策略（2-3%初筛，5%确认阈值）应对低特异性问题
 
 **建议放入正文的表**
 
