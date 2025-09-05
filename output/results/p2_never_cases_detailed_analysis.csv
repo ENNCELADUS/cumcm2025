@@ -1,0 +1,4 @@
+Method,Group,Confidence,Target_Prob,Actual_Prob_at_24w,Status,BMI_Mean,N_Mothers
+Clinical,Obese II+ (≥35),95%,0.95,0.9253668841136657,never_reached,36.73094243726338,30
+Tertile,High BMI (T3),95%,0.95,0.9487813198618849,unreachable,34.87450998204608,79
+Quartile,Q4 (High),95%,0.95,0.9425429489802494,unreachable,35.41506107981367,60

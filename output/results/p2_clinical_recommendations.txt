@@ -1,0 +1,10 @@
+Clinical Recommendations - Problem 2
+==================================================
+
+achievability: {'total_groups': 10, 'achievable_90_pct': 10, 'achievable_95_pct': 7, 'achievable_90_rate': 1.0, 'achievable_95_rate': 0.7}
+conf_90: ✅ 90% confidence level recommended for routine clinical use
+conf_95: ✅ 95% confidence level feasible for clinical use
+bmi_correlation: 0.9970756904130083
+low_bmi_avg_week: 13.233333333333334
+high_bmi_avg_week: 20.75
+bmi_effect: 7.516666666666666
