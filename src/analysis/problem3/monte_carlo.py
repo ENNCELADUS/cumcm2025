@@ -128,13 +128,10 @@ def _run_sequential_monte_carlo(df_original: pd.DataFrame,
             # Step 3: Extended preprocessing
             df_standardized, _ = standardize_covariates_extended(df_intervals_sim)
             
-            # Step 4: Add BMI grouping (identical to Problem 2)
-            df_intervals_sim = grouper.get_all_groupings(df_standardized)
+            # Step 4: Prepare extended feature matrix
+            df_X_sim = prepare_extended_feature_matrix(df_standardized, selected_covariates)
             
-            # Step 5: Prepare extended feature matrix
-            df_X_sim = prepare_extended_feature_matrix(df_intervals_sim, selected_covariates)
-            
-            # Step 6: Fit extended AFT model
+            # Step 5: Fit extended AFT model
             model_results = fit_aft_model_extended(df_X_sim, selected_covariates, test_nonlinearity=False)
             
             if model_results.get('best_model') is None:
@@ -143,12 +140,17 @@ def _run_sequential_monte_carlo(df_original: pd.DataFrame,
             
             best_model = model_results['best_model']['model']
             
+            # Step 6: Create CART BMI groups using AFT model
+            from .bmi_grouping import create_enhanced_bmi_groups
+            bmi_groups, _ = create_enhanced_bmi_groups(
+                df_X_sim, 
+                aft_model=best_model,
+                selected_covariates=selected_covariates,
+                verbose=False
+            )
+            
             # Step 7: Group survival analysis
             time_grid = np.linspace(10, 25, 100)
-            
-            # Extract BMI groups from the dataframe
-            from .bmi_grouping import create_enhanced_bmi_groups
-            bmi_groups, _ = create_enhanced_bmi_groups(df_intervals_sim, method='clinical', verbose=False)
             
             group_survival_funcs = compute_group_survival_extended(
                 bmi_groups, df_X_sim, best_model, selected_covariates, time_grid, verbose=False
@@ -225,8 +227,9 @@ def summarize_monte_carlo_per_group(mc_results: Dict[str, Any]) -> Dict[str, Dic
     
     summary = {}
     
-    # The actual data structure is: {group_name: {tau_key: value}}
-    # Not: {method_name: {group_name: {tau_key: value}}}
+    # Create summary with group-level structure for CART grouping
+    # Structure: {group_name: {tau_key: value}} (simplified for CART-only)
+    summary = {}
     
     for group_name, group_taus in first_result.items():
         summary[group_name] = {}
@@ -376,32 +379,25 @@ def analyze_monte_carlo_convergence(mc_results: Dict[str, Any]) -> Dict[str, Any
     return convergence_analysis
 
 
-def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[str, Any]]],
-                                       method_name: str = 'clinical',
+def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Any]],
                                        figsize: Tuple[int, int] = (15, 10)) -> plt.Figure:
     """
     Create comprehensive plots showing MC robustness distributions per group.
     
     Args:
-        mc_summary: Summary from summarize_monte_carlo_per_group
-        method_name: BMI grouping method to plot
+        mc_summary: Summary from summarize_monte_carlo_per_group (CART groups)
         figsize: Figure size
         
     Returns:
         Matplotlib figure with robustness plots
     """
-    if method_name not in mc_summary:
-        available_methods = list(mc_summary.keys())
-        if available_methods:
-            method_name = available_methods[0]
-        else:
-            raise ValueError("No MC summary data available")
+    if not mc_summary:
+        raise ValueError("No MC summary data available")
     
-    method_data = mc_summary[method_name]
-    groups = list(method_data.keys())
+    groups = list(mc_summary.keys())
     
     fig, axes = plt.subplots(2, 3, figsize=figsize)
-    fig.suptitle(f'Monte Carlo Robustness Analysis - {method_name.title()} BMI Grouping', fontsize=16)
+    fig.suptitle('Monte Carlo Robustness Analysis - CART BMI Grouping', fontsize=16)
     
     # Color scheme for groups
     colors = plt.cm.Set1(np.linspace(0, 1, len(groups)))
@@ -409,7 +405,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
     # Plot 1: Distribution histograms for 90% confidence
     ax1 = axes[0, 0]
     for i, group_name in enumerate(groups):
-        tau_data = method_data[group_name].get('tau_0.90', {})
+        tau_data = mc_summary[group_name].get('tau_0.90', {})
         if 'raw_weeks' in tau_data and tau_data['raw_weeks']:
             ax1.hist(tau_data['raw_weeks'], bins=20, alpha=0.6, 
                     label=f'Group {group_name}', color=colors[i])
@@ -423,7 +419,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
     # Plot 2: Distribution histograms for 95% confidence
     ax2 = axes[0, 1]
     for i, group_name in enumerate(groups):
-        tau_data = method_data[group_name].get('tau_0.95', {})
+        tau_data = mc_summary[group_name].get('tau_0.95', {})
         if 'raw_weeks' in tau_data and tau_data['raw_weeks']:
             ax2.hist(tau_data['raw_weeks'], bins=20, alpha=0.6,
                     label=f'Group {group_name}', color=colors[i])
@@ -444,7 +440,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
     for group_name in groups:
         group_labels.append(f'Group {group_name}')
         for tau in tau_levels:
-            tau_data = method_data[group_name].get(tau, {})
+            tau_data = mc_summary[group_name].get(tau, {})
             ci_width = tau_data.get('ci_width', 0)
             ci_widths[tau].append(ci_width)
     
@@ -467,7 +463,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
     
     robustness_counts = {'high': 0, 'medium': 0, 'low': 0, 'unstable': 0, 'insufficient_data': 0}
     
-    for group_data in method_data.values():
+    for group_data in mc_summary.values():
         for tau_data in group_data.values():
             label = tau_data.get('robustness_label', 'insufficient_data')
             robustness_counts[label] += 1
@@ -488,7 +484,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
     
     for group_name in groups:
         for tau, cv_list in [('tau_0.90', cv_90), ('tau_0.95', cv_95)]:
-            tau_data = method_data[group_name].get(tau, {})
+            tau_data = mc_summary[group_name].get(tau, {})
             if 'mean' in tau_data and 'std' in tau_data and tau_data['mean'] > 0:
                 cv = (tau_data['std'] / tau_data['mean']) * 100
                 cv_list.append(cv)
@@ -515,7 +511,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
         ci_widths_tau = []
         
         for group_name in groups:
-            tau_data = method_data[group_name].get(tau, {})
+            tau_data = mc_summary[group_name].get(tau, {})
             if 'mean' in tau_data and 'ci_width' in tau_data:
                 means.append(tau_data['mean'])
                 ci_widths_tau.append(tau_data['ci_width'])
@@ -535,7 +531,7 @@ def create_robustness_distribution_plots(mc_summary: Dict[str, Dict[str, Dict[st
 
 
 def export_monte_carlo_results(mc_results: Dict[str, Any],
-                             mc_summary: Dict[str, Dict[str, Dict[str, Any]]],
+                             mc_summary: Dict[str, Dict[str, Any]],
                              output_path: Path) -> Dict[str, Path]:
     """
     Export Monte Carlo results to CSV files.
@@ -555,22 +551,21 @@ def export_monte_carlo_results(mc_results: Dict[str, Any],
     
     # Export detailed summary
     summary_rows = []
-    for method_name, method_data in mc_summary.items():
-        for group_name, group_data in method_data.items():
-            for tau_key, stats in group_data.items():
-                summary_rows.append({
-                    'BMI_Grouping_Method': method_name,
-                    'BMI_Group': group_name,
-                    'Confidence_Level': tau_key.replace('tau_', ''),
-                    'N_Simulations': stats.get('n_simulations', 0),
-                    'Mean_Optimal_Week': stats.get('mean', np.nan),
-                    'Std_Optimal_Week': stats.get('std', np.nan),
-                    'Median_Optimal_Week': stats.get('median', np.nan),
-                    'CI_2.5_Percentile': stats.get('ci_2.5', np.nan),
-                    'CI_97.5_Percentile': stats.get('ci_97.5', np.nan),
-                    'CI_Width': stats.get('ci_width', np.nan),
-                    'Robustness_Label': stats.get('robustness_label', 'unknown')
-                })
+    for group_name, group_data in mc_summary.items():
+        for tau_key, stats in group_data.items():
+            summary_rows.append({
+                'BMI_Grouping_Method': 'cart',
+                'BMI_Group': group_name,
+                'Confidence_Level': tau_key.replace('tau_', ''),
+                'N_Simulations': stats.get('n_simulations', 0),
+                'Mean_Optimal_Week': stats.get('mean', np.nan),
+                'Std_Optimal_Week': stats.get('std', np.nan),
+                'Median_Optimal_Week': stats.get('median', np.nan),
+                'CI_2.5_Percentile': stats.get('ci_2.5', np.nan),
+                'CI_97.5_Percentile': stats.get('ci_97.5', np.nan),
+                'CI_Width': stats.get('ci_width', np.nan),
+                'Robustness_Label': stats.get('robustness_label', 'unknown')
+            })
     
     if summary_rows:
         df_summary = pd.DataFrame(summary_rows)

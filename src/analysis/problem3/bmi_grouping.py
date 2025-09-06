@@ -1,7 +1,8 @@
 """
-Enhanced BMI grouping analysis for Problem 3.
+Optimized BMI grouping analysis for Problem 3 using CART method.
 
-This module extends Problem 2's BMI grouping with group contrasts and enhanced reporting.
+This module uses CART-based BMI grouping (identified as optimal) with 
+group contrasts and enhanced reporting for Problem 3 analysis.
 """
 
 import pandas as pd
@@ -11,60 +12,142 @@ import seaborn as sns
 from typing import Dict, List, Tuple, Optional, Union, Any
 import warnings
 
-# Import base BMI grouping from Problem 2 
+# Import CART BMI grouping from Problem 2 
 from ..problem2.bmi_grouping import BMIGrouper
 
 
-def create_enhanced_bmi_groups(df_X: pd.DataFrame, 
-                              method: str = 'clinical',
-                              verbose: bool = True) -> Tuple[Dict[str, pd.DataFrame], Dict[str, Any]]:
+def create_enhanced_bmi_groups(
+    df_X: pd.DataFrame,
+    aft_model: Optional[Any] = None,
+    selected_covariates: Optional[List[str]] = None,
+    tau: float = 0.90,
+    cart_cutpoints: Optional[List[float]] = None,
+    verbose: bool = True
+) -> Tuple[Dict[str, pd.DataFrame], Dict[str, Any]]:
     """
-    Create enhanced BMI groups with detailed statistics for Problem 3.
-    
-    This function extends Problem 2's BMI grouping with enhanced reporting
-    and group statistics needed for the extended analysis.
+    Create enhanced BMI groups using CART following the exact plan:
+    1. Compute individual optimal weeks t_i*(τ) = inf{t: 1-S(t|X_i) ≥ τ}
+    2. Train BMI-only CART on t_i* with constraints and 1-SE pruning
+    3. Return BMI groups aligned with optimal weeks target
     
     Args:
-        df_X: Feature matrix with BMI data and covariates
-        method: Grouping method ('clinical', 'quantile', 'kmeans')
+        df_X: Feature matrix with BMI and other covariates
+        aft_model: Fitted AFT model to compute S(t|X_i)
+        selected_covariates: Covariates used in AFT model
+        tau: Coverage threshold (default 0.90)
+        cart_cutpoints: Optional explicit cutpoints to bypass CART training
         verbose: Whether to print detailed information
         
     Returns:
         Tuple of (bmi_groups_dict, group_statistics_dict)
     """
     if verbose:
-        print(f"🔄 Creating enhanced BMI groups using {method} method...")
+        print("🔄 Creating enhanced BMI groups using CART method (optimal)...")
     
     # Ensure BMI column exists
     bmi_col = 'bmi' if 'bmi' in df_X.columns else None
     if bmi_col is None and 'bmi_std' in df_X.columns:
-        # If only standardized BMI exists, create original BMI for grouping
-        # Note: This is approximate - ideally we'd store the original standardization params
-        bmi_std_mean = df_X['bmi_std'].mean()
-        bmi_std_std = df_X['bmi_std'].std()
-        
-        # Approximate reverse standardization (assuming typical BMI mean~25, std~5)
         df_X = df_X.copy()
-        df_X['bmi'] = df_X['bmi_std'] * 5 + 25  # Approximate
+        df_X['bmi'] = df_X['bmi_std'] * 5 + 25  # Approximate reverse standardization
         bmi_col = 'bmi'
-        
         if verbose:
-            print(f"   📊 Created approximate BMI from standardized values")
+            print("   📊 Created approximate BMI from standardized values")
     
     if bmi_col is None:
         raise ValueError("No BMI column found in df_X")
-    
-    # Initialize BMI grouper from Problem 2
-    grouper = BMIGrouper()
-    
-    # Create copy of df_X for processing
+
     df_with_groups = df_X.copy()
-    
-    # Apply BMI grouping using the specified method
-    group_assignments = grouper.apply_grouping(df_with_groups, method=method)
-    
-    # Add group column to dataframe
-    group_col = f'bmi_group_{method}'
+    grouper = BMIGrouper()
+
+    # Step 1: Compute individual optimal weeks t_i*(τ) following the plan
+    if cart_cutpoints is not None:
+        # Use explicit cutpoints
+        grouper.cutpoints['cart'] = sorted(cart_cutpoints)
+        group_assignments = grouper.apply_grouping(df_with_groups, method='cart')
+        group_col = 'bmi_group_cart'
+    else:
+        # Compute t_i*(τ) = inf{t: 1-S(t|X_i) ≥ τ}
+        if aft_model is None or selected_covariates is None:
+            raise ValueError("Must provide aft_model and selected_covariates to compute t_i*(τ)")
+        
+        if verbose:
+            print(f"   🧮 Computing per-row t_i*(τ) with τ={tau} from AFT for CART target...")
+        
+        time_grid = np.linspace(8, 25, 200)  # Fine grid for precise t_i* calculation
+        individual_optimal_weeks = []
+        
+        for _, row in df_with_groups.iterrows():
+            try:
+                # Extract individual covariates
+                X_individual = pd.DataFrame({
+                    col: [row[col]] for col in selected_covariates 
+                    if col in row.index and pd.notna(row[col])
+                })
+                
+                if len(X_individual.columns) != len(selected_covariates):
+                    individual_optimal_weeks.append(np.nan)
+                    continue
+                
+                # Get individual survival function S(t|X_i)
+                S_individual = aft_model.predict_survival_function(X_individual, times=time_grid)
+                survival_probs = S_individual.values[:, 0]
+                
+                # Find t_i*(τ) = inf{t: 1-S(t|X_i) ≥ τ}
+                attainment_probs = 1 - survival_probs
+                optimal_week = np.inf
+                for i, t in enumerate(time_grid):
+                    if attainment_probs[i] >= tau:
+                        optimal_week = t
+                        break
+                
+                individual_optimal_weeks.append(optimal_week)
+                
+            except Exception:
+                individual_optimal_weeks.append(np.nan)
+        
+        df_with_groups['individual_optimal_weeks'] = individual_optimal_weeks
+        
+        # Handle infinite values for CART training
+        finite_mask = np.isfinite(individual_optimal_weeks)
+        n_finite = finite_mask.sum()
+        n_infinite = len(individual_optimal_weeks) - n_finite
+        
+        if verbose:
+            print(f"   📊 Individual optimal weeks computed: {n_finite} finite, {n_infinite} infinite (>25 weeks)")
+        
+        if n_finite < 50:  # Need sufficient finite values for meaningful CART
+            if verbose:
+                print("⚠️ Too few finite optimal weeks for CART, falling back to clinical grouping")
+            group_assignments = grouper.apply_grouping(df_with_groups, method='clinical')
+            group_col = 'bmi_group_clinical'
+        else:
+            # Step 2: Train BMI-only CART on finite t_i* values with constraints
+            if verbose:
+                print("   🌲 Training BMI-only CART with constraints and 1-SE pruning...")
+            
+            # Create dataset with only finite values for CART training
+            df_cart_training = df_with_groups[finite_mask].copy()
+            
+            # Fit CART using individual optimal weeks as target
+            cutpoints = grouper.fit_cart_grouping(
+                df_cart_training, 
+                target_col='individual_optimal_weeks',
+                max_depth=3,  # Limit complexity
+                min_samples_leaf=max(30, int(0.05 * len(df_cart_training)))  # Min leaf size
+            )
+            
+            if not cutpoints:
+                if verbose:
+                    print("⚠️ CART grouping failed, falling back to clinical grouping")
+                group_assignments = grouper.apply_grouping(df_with_groups, method='clinical')
+                group_col = 'bmi_group_clinical'
+            else:
+                if verbose:
+                    print(f"   ✂️  Learned BMI cutpoints: {cutpoints}")
+                group_assignments = grouper.apply_grouping(df_with_groups, method='cart')
+                group_col = 'bmi_group_cart'
+
+    # Add group assignments
     df_with_groups[group_col] = group_assignments
     
     if group_col not in df_with_groups.columns or df_with_groups[group_col].isna().all():
@@ -78,7 +161,7 @@ def create_enhanced_bmi_groups(df_X: pd.DataFrame,
     unique_groups = [g for g in unique_groups if pd.notna(g)]
     
     if verbose:
-        print(f"   📊 Found {len(unique_groups)} BMI groups: {unique_groups}")
+        print(f"   📊 Found {len(unique_groups)} CART BMI groups: {unique_groups}")
     
     for group_name in unique_groups:
         # Get group data
@@ -95,7 +178,8 @@ def create_enhanced_bmi_groups(df_X: pd.DataFrame,
             'bmi_range': (bmi_values.min(), bmi_values.max()) if len(bmi_values) > 0 else (np.nan, np.nan),
             'mean_bmi': bmi_values.mean() if len(bmi_values) > 0 else np.nan,
             'mean_age': age_values.mean() if len(age_values) > 0 else np.nan,
-            'group_identifier': group_name
+            'group_identifier': group_name,
+            'grouping_method': 'cart'
         }
         
         if verbose:
@@ -106,7 +190,7 @@ def create_enhanced_bmi_groups(df_X: pd.DataFrame,
     df_X_enhanced[group_col] = df_with_groups[group_col]
     
     if verbose:
-        print(f"   ✅ Enhanced BMI grouping completed with {len(bmi_groups)} groups")
+        print(f"   ✅ CART BMI grouping completed with {len(bmi_groups)} groups")
     
     return bmi_groups, group_stats
 
@@ -294,13 +378,13 @@ def compute_group_contrasts(optimal_weeks: Dict[str, Dict[str, float]],
     return group_contrasts
 
 
-def assess_clinical_significance(group_contrasts: Dict[str, Dict[str, Dict[str, float]]],
-                               threshold: float = 1.0) -> Dict[str, Dict[str, Dict[str, Any]]]:
+def assess_clinical_significance(group_contrasts: Dict[str, Dict[str, float]],
+                               threshold: float = 1.0) -> Dict[str, Dict[str, Any]]:
     """
-    Assess clinical significance of group contrasts.
+    Assess clinical significance of CART-based group contrasts.
     
     Args:
-        group_contrasts: Between-group contrasts
+        group_contrasts: Between-group contrasts from CART grouping
         threshold: Clinical significance threshold in weeks
         
     Returns:
@@ -308,57 +392,49 @@ def assess_clinical_significance(group_contrasts: Dict[str, Dict[str, Dict[str, 
     """
     clinical_assessment = {}
     
-    for method_name, method_contrasts in group_contrasts.items():
-        clinical_assessment[method_name] = {}
+    for contrast_name, contrast_values in group_contrasts.items():
+        clinical_assessment[contrast_name] = {}
         
-        for contrast_name, contrast_values in method_contrasts.items():
-            clinical_assessment[method_name][contrast_name] = {}
+        for tau_key, contrast_data in contrast_values.items():
+            if isinstance(contrast_data, dict):
+                contrast_value = contrast_data.get('difference', contrast_data.get('contrast_value', 0))
+            else:
+                contrast_value = contrast_data
+                
+            abs_contrast = abs(contrast_value)
             
-            for tau_key, contrast_value in contrast_values.items():
-                abs_contrast = abs(contrast_value)
-                
-                # Assess clinical significance
-                if abs_contrast >= threshold:
-                    significance = "clinically_significant"
-                elif abs_contrast >= threshold / 2:
-                    significance = "borderline"
-                else:
-                    significance = "not_significant"
-                
-                clinical_assessment[method_name][contrast_name][tau_key] = {
-                    'contrast_value': contrast_value,
-                    'absolute_contrast': abs_contrast,
-                    'clinical_significance': significance,
-                    'direction': 'earlier' if contrast_value < 0 else 'later',
-                    'meets_threshold': abs_contrast >= threshold
-                }
+            # Assess clinical significance
+            if abs_contrast >= threshold:
+                significance = "clinically_significant"
+            elif abs_contrast >= threshold / 2:
+                significance = "borderline"
+            else:
+                significance = "not_significant"
+            
+            clinical_assessment[contrast_name][tau_key] = {
+                'contrast_value': contrast_value,
+                'absolute_contrast': abs_contrast,
+                'clinical_significance': significance,
+                'direction': 'earlier' if contrast_value < 0 else 'later',
+                'meets_threshold': abs_contrast >= threshold
+            }
     
     return clinical_assessment
 
 
-def create_group_contrast_table(clinical_assessment: Dict[str, Dict[str, Dict[str, Any]]],
-                              method_name: str = 'clinical') -> pd.DataFrame:
+def create_group_contrast_table(clinical_assessment: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
     """
-    Create formatted table of group contrasts with clinical interpretation.
+    Create formatted table of CART-based group contrasts with clinical interpretation.
     
     Args:
-        clinical_assessment: Clinical significance assessment results
-        method_name: BMI grouping method to display
+        clinical_assessment: Clinical significance assessment results from CART grouping
         
     Returns:
         Formatted DataFrame table
     """
-    if method_name not in clinical_assessment:
-        available_methods = list(clinical_assessment.keys())
-        if available_methods:
-            method_name = available_methods[0]
-            warnings.warn(f"Method '{method_name}' not found. Using '{method_name}' instead.")
-        else:
-            return pd.DataFrame()
-    
     table_data = []
     
-    for contrast_name, contrast_data in clinical_assessment[method_name].items():
+    for contrast_name, contrast_data in clinical_assessment.items():
         groups = contrast_name.replace('_vs_', ' vs ')
         
         for tau_key, assessment in contrast_data.items():
@@ -375,22 +451,24 @@ def create_group_contrast_table(clinical_assessment: Dict[str, Dict[str, Dict[st
     
     df_contrasts = pd.DataFrame(table_data)
     
-    print(f"📊 Group Contrast Table ({method_name} grouping):")
+    print("📊 CART Group Contrast Table:")
     print(df_contrasts.to_string(index=False))
     
     return df_contrasts
 
 
-def perform_enhanced_group_analysis(df_intervals: pd.DataFrame,
+def perform_enhanced_group_analysis(bmi_groups: Dict[str, pd.DataFrame],
+                                  df_X: pd.DataFrame,
                                   aft_model: Any,
                                   selected_covariates: List[str],
                                   confidence_levels: List[float] = [0.90, 0.95],
                                   clinical_threshold: float = 1.0) -> Dict[str, Any]:
     """
-    Perform comprehensive group analysis with contrasts and clinical assessment.
+    Perform comprehensive CART-based group analysis with contrasts and clinical assessment.
     
     Args:
-        df_intervals: DataFrame with BMI groups and interval data
+        bmi_groups: CART-based BMI groups from create_enhanced_bmi_groups
+        df_X: Feature matrix with covariates
         aft_model: Fitted AFT model
         selected_covariates: List of covariates used in model
         confidence_levels: Confidence levels for optimal weeks
@@ -399,12 +477,12 @@ def perform_enhanced_group_analysis(df_intervals: pd.DataFrame,
     Returns:
         Complete analysis results
     """
-    print("🔍 Starting Enhanced Group Analysis...")
+    print("🔍 Starting Enhanced CART Group Analysis...")
     
     # Step 1: Compute group survival functions
     time_grid = np.linspace(10, 25, 100)
     group_survival_funcs = compute_group_survival_extended(
-        df_intervals, aft_model, selected_covariates, time_grid
+        bmi_groups, df_X, aft_model, selected_covariates, time_grid
     )
     
     # Step 2: Calculate optimal weeks per group
@@ -420,59 +498,47 @@ def perform_enhanced_group_analysis(df_intervals: pd.DataFrame,
         group_contrasts, clinical_threshold
     )
     
-    # Step 5: Create summary tables
-    contrast_tables = {}
-    for method_name in clinical_assessment.keys():
-        contrast_tables[method_name] = create_group_contrast_table(
-            clinical_assessment, method_name
-        )
+    # Step 5: Create summary table
+    contrast_table = create_group_contrast_table(clinical_assessment)
     
     results = {
         'group_survival_functions': group_survival_funcs,
         'optimal_weeks': optimal_weeks,
         'group_contrasts': group_contrasts,
         'clinical_assessment': clinical_assessment,
-        'contrast_tables': contrast_tables,
+        'contrast_table': contrast_table,
         'time_grid': time_grid,
         'analysis_params': {
             'confidence_levels': confidence_levels,
             'clinical_threshold': clinical_threshold,
-            'n_time_points': len(time_grid)
+            'n_time_points': len(time_grid),
+            'grouping_method': 'cart'
         }
     }
     
-    print("✅ Enhanced Group Analysis Complete")
+    print("✅ Enhanced CART Group Analysis Complete")
     
     return results
 
 
 def create_group_survival_plots(group_analysis: Dict[str, Any],
-                               method_name: str = 'clinical',
                                figsize: Tuple[int, int] = (12, 8)) -> plt.Figure:
     """
-    Create comprehensive plots of group survival functions and optimal weeks.
+    Create comprehensive plots of CART-based group survival functions and optimal weeks.
     
     Args:
         group_analysis: Results from perform_enhanced_group_analysis
-        method_name: BMI grouping method to plot
         figsize: Figure size
         
     Returns:
         Matplotlib figure
     """
-    if method_name not in group_analysis['group_survival_functions']:
-        available_methods = list(group_analysis['group_survival_functions'].keys())
-        if available_methods:
-            method_name = available_methods[0]
-        else:
-            raise ValueError("No group survival functions available")
-    
     fig, axes = plt.subplots(2, 2, figsize=figsize)
-    fig.suptitle(f'Group Survival Analysis - {method_name.title()} BMI Grouping', fontsize=16)
+    fig.suptitle('CART Group Survival Analysis', fontsize=16)
     
     time_grid = group_analysis['time_grid']
-    group_survival_funcs = group_analysis['group_survival_functions'][method_name]
-    optimal_weeks = group_analysis['optimal_weeks'][method_name]
+    group_survival_funcs = group_analysis['group_survival_functions']
+    optimal_weeks = group_analysis['optimal_weeks']
     
     # Plot 1: Survival curves
     ax1 = axes[0, 0]
@@ -514,8 +580,8 @@ def create_group_survival_plots(group_analysis: Dict[str, Any],
     # Plot 3: Group contrasts heatmap
     ax3 = axes[1, 0]
     
-    if method_name in group_analysis['clinical_assessment']:
-        contrasts = group_analysis['clinical_assessment'][method_name]
+    if 'clinical_assessment' in group_analysis:
+        contrasts = group_analysis['clinical_assessment']
         
         # Create contrast matrix for heatmap
         contrast_names = list(contrasts.keys())
@@ -531,7 +597,7 @@ def create_group_survival_plots(group_analysis: Dict[str, Any],
         ax3.set_xticklabels([name.replace('_vs_', ' vs\n') for name in contrast_names], rotation=45)
         ax3.set_yticks(range(len(tau_levels)))
         ax3.set_yticklabels(['90%', '95%'])
-        ax3.set_title('Group Contrasts (Week Differences)')
+        ax3.set_title('CART Group Contrasts (Week Differences)')
         
         # Add text annotations
         for i in range(len(tau_levels)):
@@ -542,10 +608,10 @@ def create_group_survival_plots(group_analysis: Dict[str, Any],
     # Plot 4: Clinical significance summary
     ax4 = axes[1, 1]
     
-    if method_name in group_analysis['clinical_assessment']:
+    if 'clinical_assessment' in group_analysis:
         significance_counts = {'clinically_significant': 0, 'borderline': 0, 'not_significant': 0}
         
-        for contrast_data in group_analysis['clinical_assessment'][method_name].values():
+        for contrast_data in group_analysis['clinical_assessment'].values():
             for assessment in contrast_data.values():
                 sig_level = assessment['clinical_significance']
                 significance_counts[sig_level] += 1
@@ -557,7 +623,7 @@ def create_group_survival_plots(group_analysis: Dict[str, Any],
         colors_pie = ['#ff6b6b', '#feca57', '#48cae4']
         
         ax4.pie(sizes, labels=labels, colors=colors_pie, autopct='%1.1f%%', startangle=90)
-        ax4.set_title('Clinical Significance\nof Group Contrasts')
+        ax4.set_title('Clinical Significance\nof CART Group Contrasts')
     
     plt.tight_layout()
     return fig
