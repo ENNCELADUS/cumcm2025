@@ -1,4 +1,7 @@
-BMI_Range,n_mothers,representative_BMI,bmi_range,optimal_week_90,threshold_prob_at_optimal_90,optimal_week_95,threshold_prob_at_optimal_95,mc_ci_90,mc_ci_95,cv_success_rate
-Obese I (30-35),147,32.017138236274,30.0-34.9,15.9,0.900,20.2,0.951,"[15.1, 16.5]","[19.1, 21.2]",1.00
-Overweight (25-30),61,29.13631634,26.6-30.0,13.3,0.903,16.7,0.950,"[12.1, 14.8]","[15.5, 18.6]",1.00
-Obese II+ (≥35),30,36.32668681,35.1-39.2,21.1,0.901,Never,N/A,"[18.3, 22.4]","[22.2, 25.0]",1.00
+BMI_Range,n_mothers,representative_BMI,bmi_range,optimal_week_90,threshold_prob_at_optimal_90,optimal_week_95,threshold_prob_at_optimal_95,cv_success_rate
+CART_G5,46,33.75338016108715,33.0-34.9,17.9,0.902,22.6,0.951,1.00
+CART_G3,35,31.25,30.7-31.8,15.2,0.901,19.1,0.950,1.00
+CART_G1,38,28.73530863,26.6-29.3,12.9,0.901,16.4,0.951,1.00
+CART_G6,30,36.32668681,35.1-39.2,21.1,0.901,Never,N/A,1.00
+CART_G2,58,30.11937557,29.4-30.7,14.1,0.901,17.9,0.951,1.00
+CART_G4,31,32.44672328,31.9-32.9,16.4,0.901,20.8,0.951,1.00

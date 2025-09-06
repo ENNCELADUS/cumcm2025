@@ -351,12 +351,12 @@ def calculate_predicted_median_times(df_intervals: pd.DataFrame, aft_model, verb
 def evaluate_grouping_strategy(df_grouped: pd.DataFrame, grouping_col: str, 
                               penalty_lambda: float = 1.0, verbose: bool = True) -> Dict[str, Any]:
     """
-    Evaluate a BMI grouping strategy using risk-based scoring.
+    Evaluate a BMI grouping strategy using between-group variance explained.
     
     Args:
         df_grouped: DataFrame with BMI groups and predicted median times
         grouping_col: Column name for BMI groups
-        penalty_lambda: Penalty weight for number of groups
+        penalty_lambda: Penalty weight for number of groups (legacy parameter, not used)
         verbose: Whether to print evaluation details
         
     Returns:
@@ -371,48 +371,79 @@ def evaluate_grouping_strategy(df_grouped: pd.DataFrame, grouping_col: str,
         'bmi': ['mean', 'std']
     }).round(3)
     
-    # Calculate risk score components
+    # Calculate variance components
     groups = df_grouped[grouping_col].unique()
     K = len(groups)  # Number of groups
     
-    # Simple risk score: weighted average of group medians + complexity penalty
+    # Total variance in predicted_median
+    total_variance = df_grouped['predicted_median'].var()
+    
+    # Between-group variance (variance of group means, weighted by group size)
     group_sizes = df_grouped[grouping_col].value_counts()
     total_size = len(df_grouped)
     
-    weighted_median = 0
+    # Calculate group means and overall mean
+    group_means = df_grouped.groupby(grouping_col)['predicted_median'].mean()
+    overall_mean = df_grouped['predicted_median'].mean()
+    
+    # Between-group variance (sum of squared deviations from overall mean, weighted by group size)
+    between_group_variance = 0
+    for group in groups:
+        group_size = group_sizes[group]
+        group_mean = group_means[group]
+        between_group_variance += group_size * (group_mean - overall_mean) ** 2
+    between_group_variance /= total_size
+    
+    # Within-group variance (average of group variances, weighted by group size)
+    within_group_variance = 0
     for group in groups:
         group_data = df_grouped[df_grouped[grouping_col] == group]
-        if len(group_data) > 0:
-            group_median = group_data['predicted_median'].mean()
+        if len(group_data) > 1:
+            group_var = group_data['predicted_median'].var()
             group_weight = len(group_data) / total_size
-            weighted_median += group_weight * group_median
+            within_group_variance += group_weight * group_var
     
-    # Risk score: lower is better (earlier detection is better)
-    risk_score = weighted_median + penalty_lambda * K
+    # Variance explained (R-squared equivalent)
+    if total_variance > 0:
+        variance_explained = between_group_variance / total_variance
+        variance_explained_pct = variance_explained * 100
+    else:
+        variance_explained = 0
+        variance_explained_pct = 0
     
-    # Additional metrics
-    between_group_variance = df_grouped.groupby(grouping_col)['predicted_median'].mean().var()
-    within_group_variance = df_grouped.groupby(grouping_col)['predicted_median'].var().mean()
+    # F-statistic for ANOVA (optional, for reference)
+    if within_group_variance > 0 and K > 1:
+        f_statistic = (between_group_variance / (K - 1)) / (within_group_variance / (total_size - K))
+    else:
+        f_statistic = np.nan
+    
+    # Legacy metrics for backward compatibility
+    weighted_median = overall_mean  # This is always the same regardless of grouping
+    risk_score = weighted_median + penalty_lambda * K  # Keep for backward compatibility
     
     evaluation = {
         'grouping_method': grouping_col,
         'n_groups': K,
-        'risk_score': risk_score,
-        'weighted_median': weighted_median,
-        'complexity_penalty': penalty_lambda * K,
+        'variance_explained': variance_explained,
+        'variance_explained_pct': variance_explained_pct,
         'between_group_variance': between_group_variance,
         'within_group_variance': within_group_variance,
+        'total_variance': total_variance,
+        'f_statistic': f_statistic,
+        'risk_score': risk_score,  # Legacy metric
+        'weighted_median': weighted_median,  # Legacy metric
+        'complexity_penalty': penalty_lambda * K,  # Legacy metric
         'group_sizes': group_sizes.to_dict(),
         'group_stats': group_stats
     }
     
     if verbose:
         print(f"  Number of groups: {K}")
-        print(f"  Risk score: {risk_score:.3f}")
-        print(f"  Weighted median: {weighted_median:.3f} weeks")
-        print(f"  Complexity penalty: {penalty_lambda * K:.3f}")
+        print(f"  Variance explained: {variance_explained_pct:.1f}%")
         print(f"  Between-group variance: {between_group_variance:.3f}")
         print(f"  Within-group variance: {within_group_variance:.3f}")
+        print(f"  Total variance: {total_variance:.3f}")
+        print(f"  F-statistic: {f_statistic:.2f}" if not np.isnan(f_statistic) else "  F-statistic: N/A")
         
         print(f"\n  Group sizes:")
         for group, size in group_sizes.items():
@@ -471,14 +502,16 @@ def perform_group_specific_analysis(df_intervals: pd.DataFrame, aft_model,
                 if verbose:
                     print(f"⚠️ Evaluation failed for {method}: {e}")
     
-    # Step 4: Select best grouping strategy
+    # Step 4: Select best grouping strategy (highest variance explained)
     if evaluations:
-        best_method = min(evaluations.keys(), key=lambda x: evaluations[x]['risk_score'])
+        best_method = max(evaluations.keys(), key=lambda x: evaluations[x]['variance_explained'])
         best_grouping_col = f'bmi_group_{best_method}'
         
         if verbose:
             print(f"\n🏆 Best grouping strategy: {best_method}")
-            print(f"  Risk score: {evaluations[best_method]['risk_score']:.3f}")
+            print(f"  Variance explained: {evaluations[best_method]['variance_explained_pct']:.1f}%")
+            print(f"  Between-group variance: {evaluations[best_method]['between_group_variance']:.3f}")
+            print(f"  Within-group variance: {evaluations[best_method]['within_group_variance']:.3f}")
     else:
         best_method = 'clinical'
         best_grouping_col = 'bmi_group_clinical'
