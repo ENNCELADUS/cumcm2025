@@ -1,0 +1,4 @@
+step,description,n_rows,n_mothers
+raw_data,Initial data loaded,524,233
+interval_construction,One interval per mother,233,233
+final_modeling,Complete cases for selected covariates,233,233

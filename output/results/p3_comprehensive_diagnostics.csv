@@ -1,0 +1,2 @@
+model_quality,quality_score,quality_percentage,aic,log_likelihood,n_parameters,n_observations,events_per_covariate,adequate_events,heavy_left_censoring,left_censored_pct,recommendations
+Adequate,3,60.0,246.1797984478342,-115.0898992239171,8,233,3.6666666666666665,False,True,84.97854077253218,Consider larger sample size or fewer covariates for better power; Heavy left-censoring detected - consider sensitivity analysis with different thresholds

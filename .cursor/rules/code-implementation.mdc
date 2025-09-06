@@ -31,7 +31,7 @@ alwaysApply: true
 - **Configuration**: Accept parameters with sensible defaults
 - **Verbose output**: Optional detailed logging for notebook display
 
-### Refactoring Guidelines
+### Implementation Guidelines
 - **Extract functions**: Move any logic >5 lines to appropriate module
 - **Preserve structure**: Keep notebook sections matching implementation guides
 - **Function naming**: Use descriptive names matching the workflow step

@@ -1,0 +1,2 @@
+pca_applied,original_variables,components_retained,variance_explained,vif_reduction,modeling_benefit
+True,4,4,1.0,1.0282987180976715,Reduces multicollinearity while preserving 95%+ variance

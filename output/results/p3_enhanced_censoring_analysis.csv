@@ -1,0 +1,2 @@
+analysis_type,threshold,left_censored_pct,interval_censored_pct,right_censored_pct,sensitivity_needed
+left_censoring,0.04,85.0,9.4,5.6,True
