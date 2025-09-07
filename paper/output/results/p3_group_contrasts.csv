@@ -1,0 +1,13 @@
+Group_Contrast,Confidence_Level,Week_Difference,Absolute_Difference,Direction,Clinical_Significance,Clinically_Meaningful,Interpretation
+CART_G4 vs CART_G2,0.9,5.666666666666666,5.666666666666666,Later,True,✅,First group tests 5.7 weeks later
+CART_G4 vs CART_G2,0.95,inf,inf,Unknown,No,❌,No meaningful difference between groups
+CART_G4 vs CART_G1,0.9,8.242424242424242,8.242424242424242,Later,True,✅,First group tests 8.2 weeks later
+CART_G4 vs CART_G1,0.95,inf,inf,Unknown,No,❌,No meaningful difference between groups
+CART_G4 vs CART_G3,0.9,5.666666666666666,5.666666666666666,Later,True,✅,First group tests 5.7 weeks later
+CART_G4 vs CART_G3,0.95,inf,inf,Unknown,No,❌,No meaningful difference between groups
+CART_G2 vs CART_G1,0.9,2.575757575757576,2.575757575757576,Later,True,✅,First group tests 2.6 weeks later
+CART_G2 vs CART_G1,0.95,3.0909090909090935,3.0909090909090935,Later,True,✅,First group tests 3.1 weeks later
+CART_G2 vs CART_G3,0.9,0.0,0.0,Later,False,❌,First group tests 0.0 weeks earlier
+CART_G2 vs CART_G3,0.95,-0.343434343434339,0.343434343434339,Earlier,False,❌,First group tests 0.3 weeks earlier
+CART_G1 vs CART_G3,0.9,-2.575757575757576,2.575757575757576,Earlier,True,✅,First group tests 2.6 weeks earlier
+CART_G1 vs CART_G3,0.95,-3.4343434343434325,3.4343434343434325,Earlier,True,✅,First group tests 3.4 weeks earlier

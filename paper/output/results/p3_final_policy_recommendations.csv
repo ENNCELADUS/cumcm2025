@@ -1,0 +1,9 @@
+BMI_Group,Confidence_Level,Optimal_Week,MC_Mean,MC_CI_Lower,MC_CI_Upper,CI_Width,Robustness,N_MC_Simulations,N_Mothers,N_Observations,Clinical_Recommendation,CV_Stability,CV_Consistency,Overall_Robustness
+CART_G4,0.9,20.707070707070706,19.122727272727275,17.12121212121212,21.363636363636363,4.242424242424242,Medium,300,64,64,Test at week 21 (moderate confidence),variable,high,unknown
+CART_G4,0.95,inf,23.409453385529943,21.393939393939394,25.0,3.6060606060606055,Medium,209,64,64,Consider alternative testing approach,variable,high,unknown
+CART_G2,0.9,15.04040404040404,15.090909090909093,14.09090909090909,16.060606060606062,1.9696969696969724,Medium,300,73,73,Test at week 15 (moderate confidence),variable,high,unknown
+CART_G2,0.95,18.81818181818182,18.92777777777778,17.575757575757578,20.151515151515152,2.5757575757575744,Medium,300,73,73,Test at week 19 (moderate confidence),variable,high,unknown
+CART_G1,0.9,12.464646464646464,12.917171717171717,11.738636363636363,14.170454545454541,2.431818181818178,Medium,300,39,39,Test at week 12 (moderate confidence),variable,high,unknown
+CART_G1,0.95,15.727272727272727,16.518181818181816,15.0,18.261363636363633,3.261363636363633,Medium,300,39,39,Test at week 16 (moderate confidence),variable,high,unknown
+CART_G3,0.9,15.04040404040404,14.77929292929293,13.787878787878789,16.060606060606062,2.2727272727272734,Medium,300,57,57,Test at week 15 (moderate confidence),variable,high,unknown
+CART_G3,0.95,19.16161616161616,18.73030303030303,17.727272727272727,20.606060606060606,2.878787878787879,Medium,300,57,57,Test at week 19 (moderate confidence),variable,high,unknown
