@@ -1,0 +1,11 @@
+Grouping Method,BMI Group,N Mothers,BMI Range,Mean BMI,Prob at 24w,Optimal Week 90%,Optimal Week 95%
+Clinical,Obese I (30-35),147,31.1-33.1,32.1,97.4%,16.1,20.2
+Clinical,Obese II+ (≥35),30,35.7-37.7,36.7,92.5%,21.7,Never (P=92.5%@24w)
+Clinical,Overweight (25-30),61,28.0-30.0,29.0,99.0%,13.2,16.5
+Tertile,High BMI (T3),79,33.9-35.9,34.9,94.9%,19.2,Never (P=94.9%@24w)
+Tertile,Low BMI (T1),80,28.3-30.3,29.3,98.9%,13.3,16.8
+Tertile,Medium BMI (T2),79,30.5-32.5,31.5,97.8%,15.5,19.5
+Quartile,Q1 (Low),60,28.0-30.0,29.0,99.0%,13.2,16.5
+Quartile,Q2 (Med-Low),59,29.6-31.6,30.6,98.3%,14.5,18.3
+Quartile,Q3 (Med-High),59,31.5-33.5,32.5,97.1%,16.5,20.8
+Quartile,Q4 (High),60,34.4-36.4,35.4,94.3%,19.8,Never (P=94.3%@24w)

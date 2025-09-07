@@ -1,0 +1,3 @@
+Model,Formula,AIC,BIC,LogLikelihood,N_Parameters
+Linear Mixed-Effects,Y ~ weeks + BMI + (1|patient),-2452.793174715397,-2431.198334146665,1231.3965873576985,4
+Spline Mixed-Effects,"Y ~ bs(weeks, df=3) + BMI + (1|patient)",-2472.592597686141,-2442.3598208899157,1243.2962988430704,6

@@ -1,0 +1,6 @@
+Scenario,Weeks,BMI,Probability_Above_4pct,Confidence,Clinical_Decision
+"Very early, normal BMI",11,28,0.8905313729822616,Moderate,✅ Proceed with confidence
+"Early, high BMI",12,35,0.7603731091881836,Moderate,✅ Proceed with confidence
+"Standard, normal BMI",15,28,0.9454295899519224,High,✅ Proceed with high confidence
+"Standard, very high BMI",15,40,0.6475656631957452,Low,⚠ Proceed with caution
+"Late, high BMI",20,35,0.8038311917140561,Moderate,✅ Proceed with confidence

@@ -1,0 +1,2 @@
+ICC,Random_intercept_variance,Residual_variance,ICC_substantial,LR_statistic,LR_p_value,Random_effect_significant,AIC_supports_mixed,Mixed_model_justified,Evidence_count,Total_tests
+0.7108676021486802,0.0007429605595561501,0.0003021856214070352,True,186.85576566475947,0.0,True,,✅ STRONG JUSTIFICATION for mixed-effects modeling,2,2

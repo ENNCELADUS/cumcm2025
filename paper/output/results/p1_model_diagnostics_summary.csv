@@ -1,0 +1,2 @@
+Max_VIF,VIF_Assessment,BP_p_value,BP_Assessment,JB_p_value,JB_Assessment,R_squared,RMSE
+1.0222976702044708,✅ No multicollinearity concerns,1.9668946674422312e-08,❌ Reject null hypothesis - Heteroscedasticity detected,4.632968482490411e-14,❌ Reject null hypothesis - Residuals not normally distributed,0.06186093271342563,0.03249662222456917
