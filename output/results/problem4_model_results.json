@@ -1,0 +1,90 @@
+{
+  "model_name": "XGBoost",
+  "test_metrics": {
+    "confusion_matrix": [
+      [
+        118,
+        1
+      ],
+      [
+        11,
+        0
+      ]
+    ],
+    "accuracy": 0.9076923076923077,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1_score": 0.0,
+    "fpr": 0.008403361344537815,
+    "tpr": 0.0,
+    "ppv": 0.0,
+    "npv": 0.9147286821705426,
+    "pr_auc": 0.1622162923956324,
+    "roc_auc": 0.6646294881588999,
+    "brier_score": 0.08890782045503089,
+    "n_positive": 11,
+    "n_negative": 119,
+    "threshold_used": 0.6416587299108507,
+    "baseline_accuracy": 0.8384615384615385,
+    "baseline_precision": 0.08333333333333333,
+    "baseline_recall": 0.09090909090909091,
+    "baseline_f1": 0.08695652173913043
+  },
+  "feature_importance": {
+    "method": "xgboost_importance",
+    "values": {
+      "feature_importances": {
+        "gestational_weeks": 0.02360115386545658,
+        "bmi": 0.03974706679582596,
+        "age": 0.025246402248740196,
+        "z13": 0.024565542116761208,
+        "z18": 0.02225642465054989,
+        "z21": 0.017609775066375732,
+        "zx": 0.030990200117230415,
+        "gc_global": 0.026056593284010887,
+        "gc13": 0.030585162341594696,
+        "reads": 0.01719166338443756,
+        "map_ratio": 0.014551827684044838,
+        "dup_ratio": 0.03174375370144844,
+        "filtered_ratio": 0.02353554591536522,
+        "height": 0.02291693352162838,
+        "weight": 0.021899281069636345,
+        "x_concentration": 0.06727641075849533,
+        "max_z": 0.017901470884680748,
+        "z13_high": 0.0,
+        "z18_high": 0.0,
+        "z21_high": 0.0,
+        "gc_outlier": 0.0,
+        "gestational_weeks_std": 0.041957415640354156,
+        "bmi_std": 0.01388608943670988,
+        "age_std": 0.01883266307413578,
+        "z13_std": 0.020501114428043365,
+        "z18_std": 0.01697402633726597,
+        "z21_std": 0.023501327261328697,
+        "zx_std": 0.02099488489329815,
+        "gc_global_std": 0.02734302543103695,
+        "gc13_std": 0.05642760172486305,
+        "reads_std": 0.008136740885674953,
+        "map_ratio_std": 0.017356399446725845,
+        "dup_ratio_std": 0.043142855167388916,
+        "filtered_ratio_std": 0.010491028428077698,
+        "height_std": 0.023994024842977524,
+        "weight_std": 0.05447553098201752,
+        "x_concentration_std": 0.1322864145040512,
+        "max_z_std": 0.012023746967315674
+      }
+    }
+  },
+  "best_params": {
+    "subsample": 0.8,
+    "reg_lambda": 2.0,
+    "reg_alpha": 0.1,
+    "objective": "binary:logistic",
+    "n_estimators": 400,
+    "min_child_weight": 3,
+    "max_depth": 5,
+    "learning_rate": 0.2,
+    "eval_metric": "aucpr",
+    "colsample_bytree": 0.8
+  }
+}

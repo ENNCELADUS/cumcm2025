@@ -1,0 +1,26 @@
+{
+  "data_pipeline": {
+    "random_seed": 42,
+    "split_method": "stratified_train_test_split",
+    "split_ratios": {
+      "train": 0.6,
+      "calib": 0.2,
+      "test": 0.2
+    },
+    "group_aware": true,
+    "preprocessing_order": [
+      "1. Load raw data",
+      "2. Create group IDs",
+      "3. Stratified split (train+calib vs test)",
+      "4. Stratified split (train vs calib)",
+      "5. Extract features (excluding group_id)",
+      "6. No feature scaling/transformation (preserved for model-specific handling)"
+    ],
+    "leakage_prevention": {
+      "group_isolation": "No patient appears in multiple splits",
+      "temporal_order": "Not applicable (synthetic data)",
+      "feature_engineering": "No cross-split information leakage",
+      "scaling": "Applied only on training data, then to calib/test"
+    }
+  }
+}
